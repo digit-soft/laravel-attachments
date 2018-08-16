@@ -8,7 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 
 class CreateMigrationCommand extends Command
 {
-    protected $name = 'attachments:table';
+    protected $name = 'attachments:tables';
 
     protected $description = 'Create attachments tables migration';
 
