@@ -1,0 +1,29 @@
+{
+    "name": "digit-soft/laravel-attachments",
+    "description": "File attachments for laravel.",
+    "keywords": ["files", "attachments"],
+    "license": "MIT",
+    "version": "0.0.3",
+    "authors": [
+        {
+            "name": "Digit",
+            "email": "digit.vova@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "laravel/framework": "~5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "DigitSoft\\Attachments\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DigitSoft\\Attachments\\AttachmentsServiceProvider"
+            ]
+        }
+    }
+}
