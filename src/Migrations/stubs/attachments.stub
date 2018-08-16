@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class DummyClass extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        // DummyTable => attachments
+        Schema::create('DummyTable', function (Blueprint $table) {
+            $table->bigIncrements('id')->comment('ID');
+            $table->string('name')->comment('File base name');
+            $table->string('name_original')->comment('File base name original');
+            $table->string('group')->nullable()->comment('File group and save path');
+            $table->boolean('private')->default(false)->comment('Private flag');
+            $table->timestamp('created_at')->nullable()->comment('File upload time');
+
+            $table->index(['group'], 'idx_DummyTable_group');
+            $table->index(['private'], 'idx_DummyTable_private');
+        });
+
+        Schema::create('attachment_usages', function (Blueprint $table) {
+            $table->bigInteger('attachment_id')->comment('Attachment');
+            $table->string('model_id')->comment('Model');
+            $table->string('model_type')->comment('Model');
+
+            $table->index(['model_id', 'model_type'], 'idx_attachment_usages_model');
+            $table->index(['attachment_id'], 'idx_attachment_usages_attachment_id');
+            $table->index(['attachment_id', 'model_id', 'model_type'], 'idx_attachment_usages_model_attachment')->unique();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('DummyTable');
+        Schema::dropIfExists('attachment_usages');
+    }
+}
