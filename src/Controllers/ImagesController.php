@@ -15,8 +15,6 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class ImagesController extends Controller
 {
-    const MAX_DIMENSION = 3000;
-
     /**
      * Perform image transformation
      * @param Request $request
