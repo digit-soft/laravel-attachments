@@ -16,6 +16,9 @@ use Illuminate\Http\File;
  * @property string|null         $group File group and save path
  * @property bool                $private Private flag
  * @property \Carbon\Carbon|null $created_at File upload time
+ * @property string              $path File relative path
+ * @property string              $pathFull File full path
+ * @property string              $url File URL
  *
  * @property AttachmentUsage[]   $usages Attachment usages
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereCreatedAt($value)
@@ -27,12 +30,43 @@ use Illuminate\Http\File;
  */
 class Attachment extends Model
 {
+    const UPDATED_AT = null;
+
     protected $fillable = ['id', 'name', 'name_original', 'group', 'private', 'created_at'];
+
+    protected $appends = ['url'];
 
     /**
      * @var File|null
      */
     protected $_file;
+
+    /**
+     * Get path
+     * @return string
+     */
+    public function getPathAttribute()
+    {
+        return $this->path(true);
+    }
+
+    /**
+     * Get full path
+     * @return string
+     */
+    public function getPathFullAttribute()
+    {
+        return $this->path(true);
+    }
+
+    /**
+     * Get URL
+     * @return null|string
+     */
+    public function getUrlAttribute()
+    {
+        return Attachments::getUrl($this);
+    }
 
     /**
      * Get file mime type
@@ -95,5 +129,20 @@ class Attachment extends Model
     public function usages()
     {
         return $this->hasMany(AttachmentUsage::class, 'attachment_id', 'id');
+    }
+
+    /**
+     * Find attachment by file path (relative to storage app)
+     * @param string $filePath
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function whereFilePath($filePath)
+    {
+        $filePathArr = explode(DIRECTORY_SEPARATOR, $filePath);
+        $fileName = array_pop($filePathArr);
+        $fileGroup = !empty($filePathArr) ? implode(DIRECTORY_SEPARATOR, $filePathArr) : null;
+        return static::query()
+            ->where('name', '=', $fileName)
+            ->where('group', '=', $fileGroup);
     }
 }
