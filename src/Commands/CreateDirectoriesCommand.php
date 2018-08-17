@@ -43,8 +43,10 @@ class CreateDirectoriesCommand extends Command
         $storagePath = app()->storagePath() . $ds . 'app' . $ds;
         $savePublicPath = $storagePath . ltrim($this->config->get('attachments.save_path_public'), $ds);
         $savePrivatePath = $storagePath . ltrim($this->config->get('attachments.save_path_private'), $ds);
+        $imageCachePath = $storagePath . ltrim($this->config->get('attachments.image_cache_path'), $ds);
         $this->createDir($savePublicPath);
         $this->createDir($savePrivatePath);
+        $this->createDir($imageCachePath);
         $this->info("Do not forget to make symlink to 'storage/app/public' via 'storage:link' command");
     }
 
