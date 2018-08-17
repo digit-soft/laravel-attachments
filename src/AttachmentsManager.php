@@ -7,6 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -95,12 +96,26 @@ class AttachmentsManager
     }
 
     /**
-     * @param File   $file
-     * @param string $group
-     * @param bool   $private
+     * Create an attachment from file path
+     * @param string      $filePath
+     * @param string|null $group
+     * @param bool        $private
      * @return Attachment
      */
-    public function createFromFile(File $file, $group, $private = false)
+    public function createFromPath($filePath, $group = null, $private = false)
+    {
+        $file = new File($filePath);
+        return $this->createFromFile($file, $group, $private);
+    }
+
+    /**
+     * Create attachment from file object
+     * @param File        $file
+     * @param string|null $group
+     * @param bool        $private
+     * @return Attachment
+     */
+    public function createFromFile(File $file, $group = null, $private = false)
     {
         if ($file instanceof UploadedFile || !$this->isInSaveDir($file->getRealPath())) {
             list($nameOriginal, $file) = $this->saveFile($file, $group, $private);
@@ -112,6 +127,7 @@ class AttachmentsManager
             'name_original' => $nameOriginal,
             'group' => $group,
             'private' => $private,
+            'user_id' => auth()->id(),
         ];
         return new Attachment($data);
     }
@@ -126,7 +142,7 @@ class AttachmentsManager
     public function saveFile($file, $group, $private = false)
     {
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
-        $nameOriginal = $file instanceof UploadedFile && $file->getClientOriginalName() ?? $file->getFilename();
+        $nameOriginal = $file instanceof UploadedFile && $file->getClientOriginalName() ? $file->getClientOriginalName() : $file->getFilename();
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
         $nameSaved = $storage->putFile($savePath, $file);
@@ -157,9 +173,23 @@ class AttachmentsManager
         }
     }
 
+    /**
+     * Example of routes
+     */
     public function routes()
     {
+        $attachmentsCtrl = '\DigitSoft\Attachments\Controllers\AttachmentsController';
+        $imagesCtrl = '\DigitSoft\Attachments\Controllers\ImagesController';
+        Route::post('attachments/upload/{group?}/{name?}', $attachmentsCtrl . '@uploadFile');
+        Route::post('attachments/upload-private/{group?}/{name?}', $attachmentsCtrl . '@uploadFile');
+        Route::post('attachments/upload-multiple/{group?}', $attachmentsCtrl . '@uploadFiles');
+        Route::post('attachments/upload-multiple-private/{group?}', $attachmentsCtrl . '@uploadFilesPrivate');
+        Route::get('attachments/download/{id}', $attachmentsCtrl . '@downloadFile');
+        Route::get('attachments/url/{id}', $attachmentsCtrl . '@urlFile');
 
+        Route::get('images/{preset}/{file}', $imagesCtrl . '@imagePreset')
+            ->where('file', '[A-Za-z0-9\.\/_-]+')
+            ->where('preset', '[a-z0-9]+-[a-z0-9]+(-c)?');
     }
 
     /**
