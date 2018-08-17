@@ -189,7 +189,7 @@ class AttachmentsManager
 
         Route::get('images/{preset}/{file}', $imagesCtrl . '@imagePreset')
             ->where('file', '[A-Za-z0-9\.\/_-]+')
-            ->where('preset', '[a-z0-9]+-[a-z0-9]+(-c)?');
+            ->where('preset', '[a-z0-9]+-([a-z0-9])?+(-c)?');
     }
 
     /**
