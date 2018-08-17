@@ -11,6 +11,7 @@ use Illuminate\Http\File;
  *
  * @mixin \Eloquent
  * @property int                 $id ID
+ * @property int|null            $user_id Author id
  * @property string              $name File base name
  * @property string              $name_original File base name original
  * @property string|null         $group File group and save path
@@ -24,6 +25,7 @@ use Illuminate\Http\File;
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereNameOriginal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment wherePrivate($value)
@@ -32,7 +34,7 @@ class Attachment extends Model
 {
     const UPDATED_AT = null;
 
-    protected $fillable = ['id', 'name', 'name_original', 'group', 'private', 'created_at'];
+    protected $fillable = ['id', 'user_id', 'name', 'name_original', 'group', 'private', 'created_at'];
 
     protected $appends = ['url'];
 
