@@ -27,6 +27,11 @@ class AttachmentsManager
      * @var Repository
      */
     protected $config;
+    /**
+     * For test purpose
+     * @var array
+     */
+    protected $storageDiskNames = [];
 
     /**
      * AttachmentsManager constructor.
@@ -229,6 +234,16 @@ class AttachmentsManager
     }
 
     /**
+     * Set storage name for particular storage type
+     * @param string $name
+     * @param string $type
+     */
+    public function setStorage($name, $type = self::STORAGE_PUBLIC)
+    {
+        $this->storageDiskNames[$type] = $name;
+    }
+
+    /**
      * Get storage by type
      * @param string $type
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
@@ -236,7 +251,8 @@ class AttachmentsManager
     protected function getStorage($type = self::STORAGE_PUBLIC)
     {
         $storageConfigKey = 'attachments.' . $type . '_storage';
-        return Storage::disk($this->config->get($storageConfigKey, 'local'));
+        $storageDiskName = $this->storageDiskNames[$type] ?? $this->config->get($storageConfigKey, 'local');
+        return Storage::disk($storageDiskName);
     }
 
     /**
