@@ -6,13 +6,14 @@ use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\Facades\Attachments;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 /**
  * Class AttachmentsController.
  * Example of controller
  * @package DigitSoft\Attachments\Controllers
  */
-class AttachmentsController
+class AttachmentsController extends Controller
 {
     /**
      * @param Request $request
@@ -21,7 +22,7 @@ class AttachmentsController
      * @return \Illuminate\Http\JsonResponse
      * @throws FileNotFoundException
      */
-    public function uploadFile(Request $request, $group, $name = 'file')
+    public function uploadFile(Request $request, $group = 'default', $name = 'file')
     {
         $attachment = $this->uploadFileGeneral($request, $group, $name, false);
         if (!$attachment) {
@@ -37,7 +38,7 @@ class AttachmentsController
      * @return \Illuminate\Http\JsonResponse
      * @throws FileNotFoundException
      */
-    public function uploadFilePrivate(Request $request, $group, $name = 'file')
+    public function uploadFilePrivate(Request $request, $group = 'default', $name = 'file')
     {
         $attachment = $this->uploadFileGeneral($request, $group, $name, true);
         if (!$attachment) {
