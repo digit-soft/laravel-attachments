@@ -16,6 +16,7 @@ class DummyClass extends Migration
         // DummyTable => attachments
         Schema::create('DummyTable', function (Blueprint $table) {
             $table->bigIncrements('id')->comment('ID');
+            $table->bigInteger('user_id')->nullable()->comment('User');
             $table->string('name')->comment('File base name');
             $table->string('name_original')->comment('File base name original');
             $table->string('group')->nullable()->comment('File group and save path');
@@ -31,6 +32,7 @@ class DummyClass extends Migration
             $table->string('model_id')->comment('Model');
             $table->string('model_type')->comment('Model');
 
+            $table->foreign(['attachment_id'])->references('id')->on('DummyTable')->onDelete('cascade');
             $table->index(['model_id', 'model_type'], 'idx_attachment_usages_model');
             $table->index(['attachment_id'], 'idx_attachment_usages_attachment_id');
             $table->index(['attachment_id', 'model_id', 'model_type'], 'idx_attachment_usages_model_attachment')->unique();
