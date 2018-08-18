@@ -38,6 +38,20 @@ class Attachment extends Model
 
     protected $appends = ['url'];
 
+    public static function boot()
+    {
+        parent::boot();
+        // Delete file from storage
+        static::deleting(function ($attachment) {
+            /** @var static $attachment */
+            $storage = $attachment->private ? Attachments::getStoragePrivate() : Attachments::getStoragePublic();
+            $path = $attachment->path;
+            if ($storage->exists($path)) {
+                $storage->delete($path);
+            }
+        });
+    }
+
     /**
      * @var File|null
      */
@@ -49,7 +63,7 @@ class Attachment extends Model
      */
     public function getPathAttribute()
     {
-        return $this->path(true);
+        return $this->path(false);
     }
 
     /**
