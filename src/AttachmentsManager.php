@@ -5,6 +5,7 @@ namespace DigitSoft\Attachments;
 use Illuminate\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\File;
+use Illuminate\Http\Testing\File as FileTest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
@@ -115,12 +116,12 @@ class AttachmentsManager
 
     /**
      * Create attachment from file object
-     * @param File        $file
-     * @param string|null $group
-     * @param bool        $private
+     * @param File|FileTest $file
+     * @param string|null   $group
+     * @param bool          $private
      * @return Attachment
      */
-    public function createFromFile(File $file, $group = null, $private = false)
+    public function createFromFile($file, $group = null, $private = false)
     {
         if ($file instanceof UploadedFile || !$this->isInSaveDir($file->getRealPath())) {
             list($nameOriginal, $file) = $this->saveFile($file, $group, $private);
@@ -139,7 +140,7 @@ class AttachmentsManager
 
     /**
      * Save uploaded file to storage
-     * @param UploadedFile|File $file
+     * @param UploadedFile|File|FileTest $file
      * @param string            $group
      * @param bool              $private
      * @return array
@@ -151,7 +152,11 @@ class AttachmentsManager
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
         $nameSaved = $storage->putFile($savePath, $file);
-        return $nameSaved ? [$nameOriginal, new File($this->convertPathToReal($nameSaved))] : [null, null];
+        if (!$nameSaved) {
+            return [null, null];
+        }
+        $newFile = new File($this->convertPathToReal($nameSaved));
+        return [$nameOriginal, $newFile];
     }
 
     /**
