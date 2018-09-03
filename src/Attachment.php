@@ -39,7 +39,7 @@ class Attachment extends Model
 
     protected $appends = ['url', 'urlRelative'];
 
-    protected $hidden = ['id', 'created_at'];
+    protected $hidden = ['created_at'];
 
     public static function boot()
     {

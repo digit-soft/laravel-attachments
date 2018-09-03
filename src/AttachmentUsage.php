@@ -18,12 +18,4 @@ use Illuminate\Database\Eloquent\Model;
 class AttachmentUsage extends Model
 {
     protected $fillable = ['attachment_id', 'model_id', 'model_type'];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
-     */
-    public function model()
-    {
-        return $this->morphTo();
-    }
 }
