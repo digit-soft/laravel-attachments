@@ -22,6 +22,7 @@ use Illuminate\Http\File;
  * @property string              $url File URL
  *
  * @property AttachmentUsage[]   $usages Attachment usages
+ * @property Model[]             $models Models using this attachment
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereId($value)
@@ -156,6 +157,15 @@ class Attachment extends Model
     public function usages()
     {
         return $this->hasMany(AttachmentUsage::class, 'attachment_id', 'id');
+    }
+
+    /**
+     * Get models using this attachment
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function models()
+    {
+        return $this->morphMany(AttachmentUsage::class, 'model', 'model_type', 'model_id');
     }
 
     /**
