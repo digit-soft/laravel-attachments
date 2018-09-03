@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void addUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
  * @method static void removeUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
  * @method static bool hasUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
- * @method static string getUrl(\DigitSoft\Attachments\Attachment $attachment)
+ * @method static string getUrl(\DigitSoft\Attachments\Attachment $attachment, $absolute = true)
  * @method static string getSavePath($type = 'public', $group = null, $full = false)
  * @method static void cleanUp($expire_time = null, $onlyDb = false)
  * @method static \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter getStoragePublic()

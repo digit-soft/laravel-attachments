@@ -94,11 +94,12 @@ class AttachmentsManager
     /**
      * Get attachment URL
      * @param Attachment $attachment
+     * @param bool       $absolute
      * @return string
      */
-    public function getUrl(Attachment $attachment)
+    public function getUrl(Attachment $attachment, $absolute = true)
     {
-        return $attachment->private ? $this->getUrlPrivate($attachment) : $this->getUrlPublic($attachment);
+        return $attachment->private ? $this->getUrlPrivate($attachment, $absolute) : $this->getUrlPublic($attachment, $absolute);
     }
 
     /**
@@ -263,21 +264,26 @@ class AttachmentsManager
     /**
      * Get public URL
      * @param Attachment $attachment
+     * @param bool       $absolute
      * @return string
      */
-    protected function getUrlPublic(Attachment $attachment)
+    protected function getUrlPublic(Attachment $attachment, $absolute = true)
     {
         $path = $attachment->path();
         $prefix = $this->config->get('attachments.save_path_public');
         $path = strpos($path, $prefix) === 0 ? substr($path, strlen($prefix) + 1) : $path;
 
+        $basePath = $this->config->get('attachments.url.base_path');
+        $basePath = $basePath ? '/' . ltrim($basePath, '/') : '';
+        if (!$absolute) {
+            return $basePath . '/' . $path;
+        }
+
         $scheme = $this->config->get('attachments.url.scheme');
         $host = $this->config->get('attachments.url.host');
-        $basePath = $this->config->get('attachments.url.base_path');
 
         $scheme = $scheme ?? Request::getScheme();
         $host = $host ?? Request::getHost();
-        $basePath = $basePath ? '/' . ltrim($basePath, '/') : '';
         $url = $scheme . '://' . $host . $basePath . '/' . $path;
         return $url;
     }
@@ -285,9 +291,10 @@ class AttachmentsManager
     /**
      * Get private URL
      * @param Attachment $attachment
+     * @param bool       $absolute
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    protected function getUrlPrivate(Attachment $attachment)
+    protected function getUrlPrivate(Attachment $attachment, $absolute = true)
     {
         $route = $this->config->get('attachments.url.private_route');
         return url($route, ['id' => $attachment->id]);

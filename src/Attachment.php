@@ -34,9 +34,11 @@ class Attachment extends Model
 {
     const UPDATED_AT = null;
 
-    protected $fillable = ['id', 'user_id', 'name', 'name_original', 'group', 'private', 'created_at'];
+    protected $fillable = ['user_id', 'name', 'name_original', 'group', 'private', 'created_at'];
 
-    protected $appends = ['url'];
+    protected $appends = ['url', 'urlRelative'];
+
+    protected $hidden = ['id', 'created_at'];
 
     public static function boot()
     {
@@ -82,6 +84,15 @@ class Attachment extends Model
     public function getUrlAttribute()
     {
         return Attachments::getUrl($this);
+    }
+
+    /**
+     * Get URL
+     * @return null|string
+     */
+    public function getUrlRelativeAttribute()
+    {
+        return Attachments::getUrl($this, false);
     }
 
     /**
