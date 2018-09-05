@@ -56,7 +56,7 @@ class AttachmentsManager
         if ($this->hasUsage($attachment, $model_id, $model_type)) {
             return;
         }
-        $attachment->usages()->insert([
+        $attachment->usages()->create([
             'model_id' => $model_id,
             'model_type' => $model_type
         ]);

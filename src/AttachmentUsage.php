@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * DigitSoft\Attachments\AttachmentUsage
  *
+ * @property int             $id ID
  * @property int             $attachment_id Attachment
  * @property string          $model_id Model ID
  * @property string          $model_type Model type

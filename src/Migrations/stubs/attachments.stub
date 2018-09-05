@@ -28,6 +28,7 @@ class DummyClass extends Migration
         });
 
         Schema::create('attachment_usages', function (Blueprint $table) {
+            $table->bigIncrements('id')->comment('ID');
             $table->bigInteger('attachment_id')->comment('Attachment');
             $table->string('model_id')->comment('Model');
             $table->string('model_type')->comment('Model');

@@ -26,7 +26,11 @@ trait HasAttachments
      */
     public function attachments()
     {
-        return $this->morphMany(Attachment::class, 'attachment_usages', 'model_type', 'model_id');
+        return $this->morphToMany(
+            Attachment::class,
+            'model',
+            'attachment_usages'
+        );
     }
 
     /**
@@ -62,7 +66,6 @@ trait HasAttachments
      */
     private function getUsageModelId()
     {
-        $pk = $this->primaryKey;
-        return $this->{$pk};
+        return $this->getKey();
     }
 }
