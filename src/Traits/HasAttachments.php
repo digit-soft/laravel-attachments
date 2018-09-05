@@ -53,8 +53,7 @@ trait HasAttachments
         if ($this->attachments_model_type !== null) {
             return $this->attachments_model_type;
         }
-        $classNameArray = explode('\\', get_called_class());
-        return Str::snake(array_pop($classNameArray));
+        return get_called_class();
     }
 
     /**
