@@ -35,7 +35,7 @@ trait HasAttachments
      */
     public function attachmentUse($attachment)
     {
-        $attachment = $attachment instanceof Attachment ? $attachment : Attachment::whereId($attachment);
+        $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
         $id = $this->getUsageModelId();
         $type = $this->getUsageModelType();
         if ($id === null || $attachment === null) {
