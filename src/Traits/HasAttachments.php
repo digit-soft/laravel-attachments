@@ -3,8 +3,8 @@
 namespace DigitSoft\Attachments\Traits;
 
 use DigitSoft\Attachments\Attachment;
+use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Facades\Attachments;
-use Illuminate\Support\Str;
 
 /**
  * Trait HasAttachments
@@ -22,7 +22,7 @@ trait HasAttachments
 
     /**
      * Get used attachments
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function attachments()
     {
@@ -31,6 +31,15 @@ trait HasAttachments
             'model',
             'attachment_usages'
         );
+    }
+
+    /**
+     * Get attachment usages
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function attachmentUsages()
+    {
+        return $this->morphMany(AttachmentUsage::class, 'model');
     }
 
     /**
