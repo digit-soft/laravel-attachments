@@ -3,7 +3,7 @@
 namespace DigitSoft\Attachments\Observers;
 
 use DigitSoft\Attachments\Attachment;
-use DigitSoft\Attachments\Contracts\ModelAttacher;
+use DigitSoft\Attachments\Traits\HasAttachments;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -14,10 +14,10 @@ class AttachmentObserver
     /**
      *  Save attachment when model is saved.
      *
-     * @param ModelAttacher $model
+     * @param HasAttachments|Model $model
      * @return void
      */
-    public function saved(ModelAttacher $model)
+    public function saved(Model $model)
     {
         $models = [];
         foreach ($model->getAttachableFields() as $attachableField) {
@@ -40,10 +40,10 @@ class AttachmentObserver
     /**
      *  Delete attachment when model is deleted.
      *
-     * @param ModelAttacher $model
+     * @param HasAttachments|Model $model
      * @return void
      */
-    public function deleted(ModelAttacher $model)
+    public function deleted(Model $model)
     {
         $model->attachmentUsages()->delete();
     }

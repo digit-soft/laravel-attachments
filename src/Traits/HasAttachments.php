@@ -6,6 +6,7 @@ use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Contracts\ModelAttacher;
 use DigitSoft\Attachments\Facades\Attachments;
+use DigitSoft\Attachments\Observers\AttachmentObserver;
 
 /**
  * Trait HasAttachments
@@ -16,6 +17,40 @@ use DigitSoft\Attachments\Facades\Attachments;
 trait HasAttachments
 {
 
+    /**
+     * get fields related to attachments
+     * @return array
+     */
+    abstract public function getAttachableFields(): array;
+
+    /**
+     * Custom model type name (must be registered for morphing)
+     * @var string|null
+     */
+    protected $attachments_model_type;
+
+    /**
+     *  Register Model observer.
+     *
+     * @return void
+     */
+    public static function bootHasAttachments()
+    {
+        static::observe(new AttachmentObserver());
+    }
+
+    /**
+     * Get used attachments
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     */
+    public function attachments()
+    {
+        return $this->morphToMany(
+            Attachment::class,
+            'model',
+            'attachment_usages'
+        );
+    }
 
     /**
      * Get attachment usages
@@ -39,6 +74,27 @@ trait HasAttachments
             return;
         }
         Attachments::addUsage($attachment, $id, $type);
+    }
+
+    /**
+     * Get group for usage
+     * @return string
+     */
+    private function getUsageModelType()
+    {
+        if ($this->attachments_model_type !== null) {
+            return $this->attachments_model_type;
+        }
+        return get_called_class();
+    }
+
+    /**
+     * Get ID for usage
+     * @return string|int
+     */
+    private function getUsageModelId()
+    {
+        return $this->getKey();
     }
 
 }
