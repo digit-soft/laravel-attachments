@@ -32,7 +32,10 @@ return [
         'host' => null,                             //host for file downloads
         'scheme' => null,                           //scheme for file download
         'base_path' => 'storage/attachments',       //base path for file download
-        'private_route' => 'attachments/download'   //route name for private files download
+        'private' => [
+            'obtain' => 'attachments/obtain',       //route name for private files obtain url
+            'download' => 'attachments/download',   //route name for private files download
+        ],
     ],
     /*
     |------------------------------------------------------
@@ -53,4 +56,24 @@ return [
     | Time after what attachments without usage will be deleted
     */
     'expire_time' => 10800,
+    /*
+    |------------------------------------------------------
+    | Redis connection name
+    |------------------------------------------------------
+    | Connection name to redis for private files token generation
+    */
+    'redis_connection' => null,
+    /*
+    |------------------------------------------------------
+    | Token expire time
+    |------------------------------------------------------
+    | Private file token expire time in seconds
+    */
+    'token_expire' => 3600,
+    /*
+    |------------------------------------------------------
+    | User model class
+    |------------------------------------------------------
+    */
+    'user_model' => 'App\Models\User',
 ];
