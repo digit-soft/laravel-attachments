@@ -120,6 +120,17 @@ class AttachmentsManager
     }
 
     /**
+     * Get attachment by token string
+     * @param string $token
+     * @return Attachment|null
+     */
+    public function getAttachmentByToken(string $token)
+    {
+        list($attachmentId, $user) = $this->tokenManager()->get($token);
+        return $attachmentId !== null ? Attachment::whereId($attachmentId)->first() : null;
+    }
+
+    /**
      * Create an attachment from file path
      * @param string      $filePath
      * @param string|null $group
@@ -267,6 +278,15 @@ class AttachmentsManager
     }
 
     /**
+     * Get token manager instance
+     * @return TokenManager
+     */
+    public function tokenManager()
+    {
+        return app('attachments.token');
+    }
+
+    /**
      * Get storage by type
      * @param string $type
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
@@ -356,14 +376,5 @@ class AttachmentsManager
     {
         $pathStorage = app()->storagePath() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
         return strpos($realPath, $pathStorage) === 0 ? substr($realPath, strlen($pathStorage)) : $realPath;
-    }
-
-    /**
-     * Get token manager instance
-     * @return TokenManager
-     */
-    protected function tokenManager()
-    {
-        return app('attachments.token');
     }
 }

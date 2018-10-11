@@ -16,10 +16,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static string getUrl(\DigitSoft\Attachments\Attachment $attachment, $absolute = true)
  * @method static string getUrlPrivate(\DigitSoft\Attachments\Attachment $attachment)
  * @method static string getSavePath($type = 'public', $group = null, $full = false)
+ * @method static \DigitSoft\Attachments\Attachment|null getAttachmentByToken(string $token)
  * @method static void cleanUp($expire_time = null, $onlyDb = false)
  * @method static \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter getStoragePublic()
  * @method static \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter getStoragePrivate()
  * @method static void routes()
+ * @method static \DigitSoft\Attachments\TokenManager tokenManager()
  * @see \DigitSoft\Attachments\AttachmentsManager
  */
 class Attachments extends Facade
