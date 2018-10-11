@@ -99,7 +99,24 @@ class AttachmentsManager
      */
     public function getUrl(Attachment $attachment, $absolute = true)
     {
-        return $attachment->private ? $this->getUrlPrivate($attachment, $absolute) : $this->getUrlPublic($attachment, $absolute);
+        return $attachment->private ? $this->getUrlPrivateObtain($attachment, $absolute) : $this->getUrlPublic($attachment, $absolute);
+    }
+
+    /**
+     * Get URL to download private attachment
+     * @param Attachment $attachment
+     * @return null|string
+     */
+    public function getUrlPrivate(Attachment $attachment)
+    {
+        $user = auth()->user();
+        if (!$this->tokenManager()->canDownload($attachment, $user) || ($token = $this->tokenManager()->obtain($attachment, $user)) === null) {
+            return null;
+        }
+
+        $route = $this->config->get('attachments.url.private.download');
+        $url = $this->getUrlAbsoluteBase() . '/' . $route . '/' . $token;
+        return $url;
     }
 
     /**
@@ -279,13 +296,7 @@ class AttachmentsManager
             return $basePath . '/' . $path;
         }
 
-        $scheme = $this->config->get('attachments.url.scheme');
-        $host = $this->config->get('attachments.url.host');
-
-        $scheme = $scheme ?? Request::getScheme();
-        $host = $host ?? Request::getHost();
-        $url = $scheme . '://' . $host . $basePath . '/' . $path;
-        return $url;
+        return $this->getUrlAbsoluteBase() . $basePath . '/' . $path;
     }
 
     /**
@@ -294,10 +305,24 @@ class AttachmentsManager
      * @param bool       $absolute
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
-    protected function getUrlPrivate(Attachment $attachment, $absolute = true)
+    protected function getUrlPrivateObtain(Attachment $attachment, $absolute = true)
     {
-        $route = $this->config->get('attachments.url.private_route');
+        $route = $this->config->get('attachments.url.private.obtain');
         return url($route, ['id' => $attachment->id]);
+    }
+
+    /**
+     * Get absolute base URL
+     * @return string
+     */
+    protected function getUrlAbsoluteBase()
+    {
+        $scheme = $this->config->get('attachments.url.scheme');
+        $host = $this->config->get('attachments.url.host');
+        $scheme = $scheme ?? Request::getScheme();
+        $host = $host ?? Request::getHost();
+        $url = $scheme . '://' . $host;
+        return $url;
     }
 
     /**
@@ -331,5 +356,14 @@ class AttachmentsManager
     {
         $pathStorage = app()->storagePath() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
         return strpos($realPath, $pathStorage) === 0 ? substr($realPath, strlen($pathStorage)) : $realPath;
+    }
+
+    /**
+     * Get token manager instance
+     * @return TokenManager
+     */
+    protected function tokenManager()
+    {
+        return app('attachments.token');
     }
 }

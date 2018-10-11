@@ -38,6 +38,7 @@ class AttachmentsServiceProvider extends ServiceProvider
         $this->mergeConfigFrom($configPath, 'attachments');
 
         $this->registerManager();
+        $this->registerTokenManager();
         $this->registerCommands();
     }
 
@@ -50,6 +51,23 @@ class AttachmentsServiceProvider extends ServiceProvider
     {
         $this->app->singleton('attachments', function ($app) {
             return new AttachmentsManager($app['files'], $app['config']);
+        });
+    }
+
+    /**
+     * Register tokens manager
+     */
+    protected function registerTokenManager()
+    {
+        $this->app->singleton('attachments.token', function ($app) {
+            /** @var \Illuminate\Config\Repository $config */
+            /** @var \Illuminate\Foundation\Application $app */
+            $config = $app['config'];
+            return new TokenManager(
+                $app->make('redis'),
+                $config->get('attachments.redis_connection'),
+                $config->get('attachments.token_expire')
+            );
         });
     }
 
@@ -71,6 +89,9 @@ class AttachmentsServiceProvider extends ServiceProvider
         ]);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function provides()
     {
         return [
