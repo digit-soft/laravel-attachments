@@ -71,7 +71,6 @@ class TokenManager
     public function createToken(Attachment $attachment, User $user)
     {
         $tokenStr = $this->generateTokenStr();
-        $this->store($attachment, $user, $tokenStr);
         return $this->store($attachment, $user, $tokenStr) ? $tokenStr : null;
     }
 
