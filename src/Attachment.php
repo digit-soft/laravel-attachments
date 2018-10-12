@@ -2,9 +2,11 @@
 
 namespace DigitSoft\Attachments;
 
+use App\Models\UserProfile;
 use DigitSoft\Attachments\Facades\Attachments;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\File;
+use Illuminate\Support\Arr;
 
 /**
  * DigitSoft\Attachments\Attachment
@@ -161,11 +163,13 @@ class Attachment extends Model
 
     /**
      * Get models using this attachment
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     * @return \Illuminate\Support\Collection
      */
-    public function models()
+    public function getModelsAttribute()
     {
-        return $this->morphMany(AttachmentUsage::class, 'model', 'model_type', 'model_id');
+        $usages = $this->usages()->with(['model'])->get();
+        $models = Arr::pluck($usages, 'model');
+        return collect($models);
     }
 
     /**
