@@ -20,6 +20,13 @@ class AttachmentsManager
     const STORAGE_PRIVATE = 'private';
     const STORAGE_PUBLIC = 'public';
 
+    const ROUTE_PRIVATE_UPLOAD          = 'attachments.upload.private';
+    const ROUTE_PRIVATE_UPLOAD_MULTIPLE = 'attachments.upload.private.multiple';
+    const ROUTE_PUBLIC_UPLOAD           = 'attachments.upload.public';
+    const ROUTE_PUBLIC_UPLOAD_MULTIPLE  = 'attachments.upload.public.multiple';
+    const ROUTE_PRIVATE_OBTAIN          = 'attachments.obtain.private';
+    const ROUTE_PRIVATE_DOWNLOAD        = 'attachments.download.private';
+
     /**
      * @var Filesystem
      */
@@ -114,8 +121,8 @@ class AttachmentsManager
             return null;
         }
 
-        $route = $this->config->get('attachments.url.private.download');
-        $url = $this->getUrlAbsoluteBase() . '/' . $route . '/' . $token;
+        $relUrl = url()->route(static::ROUTE_PRIVATE_DOWNLOAD, ['token' => $token], false);
+        $url = $this->getUrlAbsoluteBase() . '/' . $relUrl;
         return $url;
     }
 
@@ -327,8 +334,7 @@ class AttachmentsManager
      */
     protected function getUrlPrivateObtain(Attachment $attachment, $absolute = true)
     {
-        $route = $this->config->get('attachments.url.private.obtain');
-        return url($route, ['id' => $attachment->id]);
+        return url()->route(static::ROUTE_PRIVATE_OBTAIN, ['id' => $attachment->id], $absolute);
     }
 
     /**
