@@ -7,6 +7,7 @@ use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Contracts\ModelAttacher;
 use DigitSoft\Attachments\Facades\Attachments;
 use DigitSoft\Attachments\Observers\AttachmentObserver;
+use Illuminate\Foundation\Auth\User;
 
 /**
  * Trait HasAttachments
@@ -74,6 +75,17 @@ trait HasAttachments
             return;
         }
         Attachments::addUsage($attachment, $id, $type);
+    }
+
+    /**
+     * Fallback private attachment download check if model has no Policy
+     * @param User       $user
+     * @param Attachment $attachment
+     * @return bool
+     */
+    public function attachmentCanDownload(User $user, Attachment $attachment)
+    {
+        return false;
     }
 
     /**

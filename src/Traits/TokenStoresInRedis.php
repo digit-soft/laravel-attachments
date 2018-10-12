@@ -149,7 +149,7 @@ trait TokenStoresInRedis
     {
         $attachmentId = $this->normalizeModelKey($attachment);
         $userId = $this->normalizeModelKey($user);
-        return strtr($this->tokenKeyPattern, ['{attachment}' => $attachmentId, '{user}' => $userId]);
+        return strtr($this->attachmentKeyPattern, ['{attachment}' => $attachmentId, '{user}' => $userId]);
     }
 
     /**
