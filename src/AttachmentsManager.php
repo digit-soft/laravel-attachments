@@ -122,7 +122,7 @@ class AttachmentsManager
         }
 
         $relUrl = url()->route(static::ROUTE_PRIVATE_DOWNLOAD, ['token' => $token], false);
-        $url = $this->getUrlAbsoluteBase() . '/' . $relUrl;
+        $url = $this->getUrlAbsoluteBase() . '/' . ltrim($relUrl, '/');
         return $url;
     }
 
