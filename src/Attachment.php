@@ -22,6 +22,7 @@ use Illuminate\Support\Arr;
  * @property string              $path File relative path
  * @property string              $pathFull File full path
  * @property string              $url File URL
+ * @property string              $urlRelative File relative URL
  *
  * @property AttachmentUsage[]   $usages Attachment usages
  * @property Model[]             $models Models using this attachment
