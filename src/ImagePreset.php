@@ -125,10 +125,7 @@ class ImagePreset
      */
     protected function nameEncoded()
     {
-        $wStr = $this->width !== null ? dechex($this->width) : '';
-        $hStr = $this->height !== null ? dechex($this->height) : '';
-        $cropStr = $this->crop ? '-c' : '';
-        return $wStr . '-' . $hStr . $cropStr;
+        return static::encodeName($this->width, $this->height, $this->crop);
     }
 
     /**
@@ -152,6 +149,24 @@ class ImagePreset
             return false;
         }
         return true;
+    }
+
+    /**
+     * Get encoded name from width, height and crop data
+     * @param  int|null $width
+     * @param  int|null $height
+     * @param  bool $crop
+     * @return string|null
+     */
+    public static function encodeName($width = null, $height = null, $crop = false)
+    {
+        if (!static::validateDimensions($width, $height, $crop)) {
+            return null;
+        }
+        $wStr = $width !== null ? dechex($width) : '';
+        $hStr = $height !== null ? dechex($height) : '';
+        $cropStr = $crop ? '-c' : '';
+        return $wStr . '-' . $hStr . $cropStr;
     }
 
     /**
