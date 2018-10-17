@@ -26,8 +26,7 @@ class ImagesController extends Controller
     public function imagePreset(Request $request, $presetName, $fileName)
     {
         $attachment = $this->findAttachmentByFilePath($fileName);
-        $preset = ImagePreset::createFromEncoded($presetName);
-        if ($preset === null) {
+        if (!$attachment->isMimeLike('image/*') || ($preset = ImagePreset::createFromEncoded($presetName)) === null) {
             throw new NotFoundHttpException();
         }
         $srcPath = $attachment->path(true);
