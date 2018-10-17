@@ -2,11 +2,11 @@
 
 namespace DigitSoft\Attachments;
 
-use App\Models\UserProfile;
 use DigitSoft\Attachments\Facades\Attachments;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\File;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * DigitSoft\Attachments\Attachment
@@ -110,6 +110,17 @@ class Attachment extends Model
     }
 
     /**
+     * Check that mime type follows given pattern
+     * @param string $expression
+     * @return bool
+     */
+    public function isMimeLike(string $expression = '*')
+    {
+        $mime = $this->mime();
+        return $mime !== null ? Str::is($expression, $mime) : false;
+    }
+
+    /**
      * Get file size
      * @return int|null
      */
@@ -168,6 +179,7 @@ class Attachment extends Model
      */
     public function getModelsAttribute()
     {
+        /** @var array|\Illuminate\Support\Collection $usages */
         $usages = $this->usages()->with(['model'])->get();
         $models = Arr::pluck($usages, 'model');
         return collect($models);
