@@ -76,4 +76,22 @@ return [
     |------------------------------------------------------
     */
     'user_model' => 'App\Models\User',
+    /*
+    |------------------------------------------------------
+    | Upload size limits by mime type pattern
+    |------------------------------------------------------
+    | '*' - for all file types
+    | You can use pattern input with wildcard, e.g. 'image/*' for all images
+    */
+    'file_size_limit' => [
+        '*' => 20971520,                                        // 20MB
+        'image/*' => 1048576,                                   // 1MB (all images)
+        'text/plain' => 1048576,                                // 1MB (.txt)
+        //'application/vnd.oasis.opendocument.text' => 2097152,   // 2MB (.odt)
+        //'application/msword' => 2097152,                        // 2MB (.doc)
+        //'application/vnd.ms-office' => 2097152,                 // 2MB (.xls)
+        //'application/pdf' => 2097152,                           // 2MB (.pdf)
+        //'application/xml' => 10485760,                          // 10MB (.xml)
+        //'application/*' => 10485760,                            // 2MB (other)
+    ],
 ];

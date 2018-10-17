@@ -3,10 +3,14 @@
 namespace DigitSoft\Attachments\Controllers;
 
 use DigitSoft\Attachments\Attachment;
+use DigitSoft\Attachments\AttachmentsManager;
 use DigitSoft\Attachments\Facades\Attachments;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class AttachmentsController.
@@ -16,99 +20,124 @@ use Illuminate\Routing\Controller;
 class AttachmentsController extends Controller
 {
     /**
-     * @param Request $request
-     * @param string  $group
-     * @param string  $name
-     * @return \Illuminate\Http\JsonResponse
-     * @throws FileNotFoundException
+     * AttachmentController constructor.
      */
-    public function uploadFile(Request $request, $group = 'default', $name = 'file')
+    public function __construct()
     {
-        $attachment = $this->uploadFileGeneral($request, $group, $name, false);
-        if (!$attachment) {
-            throw new FileNotFoundException();
-        }
-        return response()->json($attachment->toArray());
+        $this->middleware('auth:api')
+            ->except('downloadPrivate');
     }
 
     /**
-     * @param Request $request
-     * @param string  $group
-     * @param string  $name
-     * @return \Illuminate\Http\JsonResponse
-     * @throws FileNotFoundException
+     * Upload one public file
+     * @param Request     $request
+     * @param string|null $group
+     * @param string      $name
+     * @return \Illuminate\Http\Response
+     * @throws BadRequestHttpException
      */
-    public function uploadFilePrivate(Request $request, $group = 'default', $name = 'file')
+    public function uploadFile(Request $request, $group = null, $name = 'file')
+    {
+        $attachment = $this->uploadFileGeneral($request, $group, $name, false);
+        if ($attachment === null) {
+            throw new BadRequestHttpException("File in request not found");
+        }
+        return response()->success($attachment->toArray());
+    }
+
+    /**
+     * Upload one private file
+     * @param Request     $request
+     * @param string|null $group
+     * @param string      $name
+     * @return \Illuminate\Http\Response
+     * @throws BadRequestHttpException
+     */
+    public function uploadFilePrivate(Request $request, $group = null, $name = 'file')
     {
         $attachment = $this->uploadFileGeneral($request, $group, $name, true);
         if (!$attachment) {
-            throw new FileNotFoundException();
+            throw new BadRequestHttpException("File in request not found");
         }
-        return response()->json($attachment->toArray());
+        return response()->success($attachment->toArray());
     }
 
     /**
-     * @param Request $request
-     * @param string  $group
-     * @return \Illuminate\Http\JsonResponse
-     * @throws FileNotFoundException
+     * Upload multiple public files
+     * @param Request     $request
+     * @param string|null $group
+     * @return \Illuminate\Http\Response
+     * @throws BadRequestHttpException
      */
-    public function uploadFiles(Request $request, $group = 'default')
+    public function uploadFiles(Request $request, $group = null)
     {
         $data = $this->uploadFilesGeneral($request, $group, false);
         if (empty($data)) {
-            throw new FileNotFoundException();
+            throw new BadRequestHttpException("Files in request not found");
         }
-        return response()->json($data);
+        return response()->success($data);
     }
 
     /**
-     * @param Request $request
-     * @param string  $group
-     * @return \Illuminate\Http\JsonResponse
-     * @throws FileNotFoundException
+     * Upload multiple private files
+     * @param Request     $request
+     * @param string|null $group
+     * @return \Illuminate\Http\Response
+     * @throws BadRequestHttpException
      */
-    public function uploadFilesPrivate(Request $request, $group = 'default')
+    public function uploadFilesPrivate(Request $request, $group = null)
     {
-        $data = $this->uploadFilesGeneral($request, $group, false);
+        $data = $this->uploadFilesGeneral($request, $group, true);
         if (empty($data)) {
-            throw new FileNotFoundException();
+            throw new BadRequestHttpException("Files in request not found");
         }
-        return response()->json($data);
+        return response()->success($data);
     }
 
     /**
+     * Get link to private file
      * @param Request $request
      * @param int     $id
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function downloadFile(Request $request, $id)
+    public function linkPrivate(Request $request, int $id)
     {
         $attachment = Attachment::findOrFail($id);
-        $attachment->storage()->download($attachment->path(), $attachment->name_original);
+        $url = Attachments::getUrlPrivate($attachment);
+        if (!$url) {
+            abort(403);
+        }
+        return response()->success($url);
     }
 
     /**
-     * @param Request $request
-     * @param int     $id
-     * @return string
+     * Download private file
+     * @param  Request $request
+     * @param  string  $token
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function urlFile(Request $request, $id)
+    public function downloadPrivate(Request $request, $token)
     {
-        $attachment = Attachment::findOrFail($id);
-        return Attachments::getUrl($attachment);
+        $attachment = Attachments::getAttachmentByToken($token);
+        if (!$attachment || !$attachment->private) {
+            abort(404);
+        }
+        config()->set('debugbar.enabled', false);
+        return $attachment->storage()->download($attachment->path, $attachment->name_original);
     }
 
     /**
+     * Upload file helper
      * @param Request $request
      * @param string  $group
      * @param string  $name
      * @param bool    $private
      * @return Attachment|null
      */
-    protected function uploadFileGeneral(Request $request, $group, $name = 'file', $private = false)
+    protected function uploadFileGeneral(Request $request, $group = null, $name = 'file', $private = false)
     {
         $file = $request->file($name);
-        if (!$file) {
+        if (!$file || !$this->validateUploadSize($file)) {
             return null;
         }
         $attachment = Attachments::createFromFile($file, $group, $private);
@@ -117,12 +146,13 @@ class AttachmentsController extends Controller
     }
 
     /**
+     * Upload multiple files helper
      * @param Request $request
      * @param string  $group
      * @param bool    $private
      * @return Attachment[]
      */
-    protected function uploadFilesGeneral(Request $request, $group, $private = false)
+    protected function uploadFilesGeneral(Request $request, $group = null, $private = false)
     {
         $files = $request->allFiles();
         if (empty($files)) {
@@ -130,9 +160,53 @@ class AttachmentsController extends Controller
         }
         $filesData = [];
         foreach ($files as $key => $file) {
+            if (!$this->validateUploadSize($file)) {
+                $filesData[$key] = null;
+                continue;
+            }
             $attachment = Attachments::createFromFile($file, $group, $private);
             $filesData[$key] = $attachment->save() ? $attachment->toArray() : null;
         }
         return $filesData;
+    }
+
+    /**
+     * Register controller routes
+     */
+    public static function registerRoutes()
+    {
+        $self = '\\' . static::class;
+        Route::post('attachments/upload/{group}/{name?}', $self . '@uploadFile')->name(AttachmentsManager::ROUTE_PUBLIC_UPLOAD);
+        Route::post('attachments/upload-private/{group}/{name?}', $self . '@uploadFilePrivate')->name(AttachmentsManager::ROUTE_PRIVATE_UPLOAD);
+        Route::post('attachments/upload-multiple/{group}', $self . '@uploadFiles')->name(AttachmentsManager::ROUTE_PUBLIC_UPLOAD_MULTIPLE);
+        Route::post('attachments/upload-multiple-private/{group}', $self . '@uploadFilesPrivate')->name(AttachmentsManager::ROUTE_PRIVATE_UPLOAD_MULTIPLE);
+        Route::get('attachments/obtain/{id}', $self . '@linkPrivate')->name(AttachmentsManager::ROUTE_PRIVATE_OBTAIN);
+    }
+
+    /**
+     * Validate uploaded file size
+     * @param UploadedFile $file
+     * @return bool
+     */
+    protected function validateUploadSize($file)
+    {
+        $limits = config('attachments.file_size_limit', []);
+        $fileSize = $file->getSize();
+
+        if (($fileMimeType = $file->getMimeType()) !== null) {
+            foreach ($limits as $mimePattern => $limit) {
+                // Mime type rule exactly matches file mime type and file size less or equals to limit
+                // than do not check other rules. This works if mime in config placed before any matching
+                // wildcard pattern
+                if ($mimePattern === $fileMimeType && $fileSize <= $limit) {
+                    return true;
+                }
+                if (Str::is($mimePattern, $fileMimeType) && $fileSize > $limit) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }
