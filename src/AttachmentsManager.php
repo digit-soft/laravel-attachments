@@ -23,6 +23,7 @@ class AttachmentsManager
     const ROUTE_PRIVATE_UPLOAD          = 'attachments.upload.private';
     const ROUTE_PRIVATE_UPLOAD_MULTIPLE = 'attachments.upload.private.multiple';
     const ROUTE_PUBLIC_UPLOAD           = 'attachments.upload.public';
+    const ROUTE_PUBLIC_UPLOAD_IMAGE     = 'attachments.upload.image';
     const ROUTE_PUBLIC_UPLOAD_MULTIPLE  = 'attachments.upload.public.multiple';
     const ROUTE_PRIVATE_OBTAIN          = 'attachments.obtain.private';
     const ROUTE_PRIVATE_DOWNLOAD        = 'attachments.download.private';
