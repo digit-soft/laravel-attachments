@@ -37,16 +37,19 @@ class ImagePreset
 
     /**
      * Execute transformation for file
-     * @param string $fileSourcePath
+     * @param  string $fileSourcePath
+     * @param  bool   $overwriteSource
      * @return bool
      */
-    public function executeForFile($fileSourcePath)
+    public function executeForFile($fileSourcePath, $overwriteSource = false)
     {
         $storage = Attachments::getStoragePublic();
         if (!$storage->exists($this->convertPathToStorage($fileSourcePath))) {
             return false;
         }
-        $fileDstPath = $this->dstPath($fileSourcePath, true);
+        $fileDstPath = $overwriteSource
+            ? $fileSourcePath
+            : $this->dstPath($fileSourcePath, true);
         $dstDirPath = $this->convertPathToStorage(dirname($fileDstPath));
         $img = $this->getImage($fileSourcePath);
         $resizeCallback = function($constraint) { $constraint->aspectRatio(); };
