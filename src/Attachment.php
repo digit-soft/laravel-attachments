@@ -12,20 +12,22 @@ use Illuminate\Support\Str;
  * DigitSoft\Attachments\Attachment
  *
  * @mixin \Eloquent
- * @property int                 $id ID
- * @property int|null            $user_id Author id
- * @property string              $name File base name
- * @property string              $name_original File base name original
- * @property string|null         $group File group and save path
- * @property bool                $private Private flag
- * @property \Carbon\Carbon|null $created_at File upload time
- * @property string              $path File relative path
- * @property string              $pathFull File full path
- * @property string              $url File URL
- * @property string              $urlRelative File relative URL
+ * @property int                    $id ID
+ * @property int|null               $user_id Author id
+ * @property string                 $name File base name
+ * @property string                 $name_original File base name original
+ * @property string|null            $group File group and save path
+ * @property bool                   $private Private flag
+ * @property \Carbon\Carbon|null    $created_at File upload time
+ * @property string                 $path File relative path
+ * @property string                 $pathFull File full path
+ * @property string                 $url File URL
+ * @property string                 $urlRelative File relative URL
  *
- * @property AttachmentUsage[]   $usages Attachment usages
- * @property Model[]             $models Models using this attachment
+ * @property-read int|null          $imageWidth Image width
+ * @property-read int|null          $imageHeight Image height
+ * @property-read AttachmentUsage[] $usages Attachment usages
+ * @property-read Model[]           $models Models using this attachment
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereId($value)
@@ -43,6 +45,8 @@ class Attachment extends Model
     protected $appends = ['url', 'urlRelative'];
 
     protected $hidden = ['created_at'];
+
+    protected $_imageDimensions;
 
     public static function boot()
     {
@@ -141,6 +145,39 @@ class Attachment extends Model
             $this->_file = new File($this->path(true));
         }
         return $this->_file;
+    }
+
+    /**
+     * Get image width
+     * @return int|null
+     */
+    public function getImageWidthAttribute()
+    {
+        list($width,) = $this->getImageDimensions();
+        return $width;
+    }
+
+    /**
+     * Get image height
+     * @return int|null
+     */
+    public function getImageHeightAttribute()
+    {
+        list(, $height) = $this->getImageDimensions();
+        return $height;
+    }
+
+    /**
+     * Get image dimensions array
+     * @return array
+     */
+    protected function getImageDimensions()
+    {
+        if ($this->_imageDimensions === null) {
+            $data = $this->isMimeLike('image/*') ? getimagesize($this->pathFull) : false;
+            $this->_imageDimensions = !empty($data) ? [$data[0], $data[1]] : [null, null];
+        }
+        return $this->_imageDimensions;
     }
 
     /**
