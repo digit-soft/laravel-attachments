@@ -94,4 +94,14 @@ return [
         //'application/xml' => 10485760,                          // 10MB (.xml)
         //'application/*' => 10485760,                            // 2MB (other)
     ],
+    /*
+    |-------------------------------------------------------
+    | Uploaded image max dimensions
+    |-------------------------------------------------------
+    | Larger images  will be resized
+    */
+    'image_size_limit' => [
+        'width' => 1920,
+        'height' => 1280
+    ],
 ];
