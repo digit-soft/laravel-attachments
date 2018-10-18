@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: digit
- * Date: 17.08.18
- * Time: 10:39
- */
 
 namespace DigitSoft\Attachments;
-
 
 use DigitSoft\Attachments\Facades\Attachments;
 use Intervention\Image\Facades\Image;
