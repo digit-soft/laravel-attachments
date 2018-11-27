@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * Class Attachments
  * @package DigitSoft\Attachments\Facades
+ * @method static \DigitSoft\Attachments\Attachment createFromUrl(string $fileUrl, $group = null, $private = false)
  * @method static \DigitSoft\Attachments\Attachment createFromPath(string $filePath, $group = null, $private = false)
  * @method static \DigitSoft\Attachments\Attachment createFromFile(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $file, $group = null, $private = false)
  * @method static array saveFile(\Illuminate\Http\UploadedFile $uploadedFile, $group, $private = false)

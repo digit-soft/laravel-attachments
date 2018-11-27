@@ -2,6 +2,9 @@
 
 namespace DigitSoft\Attachments;
 
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 use Illuminate\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\File;
@@ -10,6 +13,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Class AttachmentsManager
@@ -140,6 +144,32 @@ class AttachmentsManager
     }
 
     /**
+     * Create an attachment from remote file URL
+     * @param string      $fileUrl
+     * @param string|null $group
+     * @param bool        $private
+     * @return Attachment|null
+     */
+    public function createFromUrl($fileUrl, $group = null, $private = false)
+    {
+        $client = new HttpClient(['verify' => false]);
+        $tmpFileName = tempnam(sys_get_temp_dir(), 'attDl');
+        $tmpFileStream = fopen($tmpFileName, 'w+');
+        try {
+            $client->get($fileUrl, [RequestOptions::SINK => $tmpFileStream]);
+        } catch (GuzzleException $exception) {
+            return null;
+        }
+        $baseName = basename($fileUrl);
+        if (!preg_match('/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/i', $baseName)) {
+            $baseName = '';
+        }
+        $uploadedFile = new UploadedFile($tmpFileName, $baseName);
+        $attachment = $this->createFromFile($uploadedFile, $group, $private);
+        return $attachment;
+    }
+
+    /**
      * Create an attachment from file path
      * @param string      $filePath
      * @param string|null $group
@@ -154,9 +184,9 @@ class AttachmentsManager
 
     /**
      * Create attachment from file object
-     * @param File|FileTest $file
-     * @param string|null   $group
-     * @param bool          $private
+     * @param File|UploadedFile|FileTest $file
+     * @param string|null                $group
+     * @param bool                       $private
      * @return Attachment
      */
     public function createFromFile($file, $group = null, $private = false)
@@ -195,6 +225,29 @@ class AttachmentsManager
         }
         $newFile = new File($this->convertPathToReal($nameSaved));
         return [$nameOriginal, $newFile];
+    }
+
+    /**
+     * Save resource to storage
+     * @param resource $resource
+     * @param string   $fileName
+     * @param string   $group
+     * @param bool     $private
+     * @return array
+     */
+    public function saveResource($resource, $fileName, $group, $private = false)
+    {
+        $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
+        $storage = $this->getStorage($storageType);
+        $savePath = $this->getSavePath($storageType, $group);
+        dd($savePath);
+        rewind($resource);
+        $nameSaved = $storage->put($savePath, $resource);
+        if (!$nameSaved) {
+            return [null, null];
+        }
+        $newFile = new File($this->convertPathToReal($nameSaved));
+        return [$fileName, $newFile];
     }
 
     /**
