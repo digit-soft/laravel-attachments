@@ -13,7 +13,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * Class AttachmentsManager
@@ -240,7 +239,6 @@ class AttachmentsManager
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
-        dd($savePath);
         rewind($resource);
         $nameSaved = $storage->put($savePath, $resource);
         if (!$nameSaved) {
