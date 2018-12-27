@@ -2,7 +2,6 @@
 
 namespace DigitSoft\Attachments\Jobs;
 
-use DigitSoft\Attachments\ImageCropper;
 use DigitSoft\Attachments\ImageResizer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -37,13 +36,18 @@ class ImageResizeJob implements ShouldQueue
      * Execute the job.
      *
      * @return void
+     * @throws \Exception
      */
     public function handle()
     {
         /** @var Filesystem $files */
         $files = app('files');
         if ($files->exists($this->resizer->filePath)) {
-            $this->resizer->now();
+            if (!$this->resizer->now()) {
+                throw new \Exception(strtr("Can't resize image {path}", ['{path}' => $this->resizer->filePath]));
+            }
+        } else {
+            throw new \Exception(strtr("File {path} not exists", ['{path}' => $this->resizer->filePath]));
         }
     }
 

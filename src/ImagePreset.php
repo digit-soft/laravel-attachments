@@ -3,6 +3,7 @@
 namespace DigitSoft\Attachments;
 
 use DigitSoft\Attachments\Facades\Attachments;
+use Intervention\Image\Constraint;
 use Intervention\Image\Facades\Image;
 
 class ImagePreset
@@ -52,7 +53,11 @@ class ImagePreset
             : $this->dstPath($fileSourcePath, true);
         $dstDirPath = $this->convertPathToStorage(dirname($fileDstPath));
         $img = $this->getImage($fileSourcePath);
-        $resizeCallback = function($constraint) { $constraint->aspectRatio(); };
+        $img->orientate();
+        $resizeCallback = function($constraint) {
+            /** @var Constraint $constraint */
+            $constraint->aspectRatio();
+        };
         if ($this->crop) {
             $img->fit($this->width, $this->height);
         } else {
