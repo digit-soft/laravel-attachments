@@ -222,7 +222,9 @@ class AttachmentsManager
         if (!$nameSaved) {
             return [null, null];
         }
-        $newFile = new File($this->convertPathToReal($nameSaved));
+        $realPath = $this->convertPathToReal($nameSaved);
+        chmod($realPath, 0666);
+        $newFile = new File($realPath);
         return [$nameOriginal, $newFile];
     }
 
@@ -244,7 +246,9 @@ class AttachmentsManager
         if (!$nameSaved) {
             return [null, null];
         }
-        $newFile = new File($this->convertPathToReal($nameSaved));
+        $realPath = $this->convertPathToReal($nameSaved);
+        chmod($realPath, 0666);
+        $newFile = new File($realPath);
         return [$fileName, $newFile];
     }
 
