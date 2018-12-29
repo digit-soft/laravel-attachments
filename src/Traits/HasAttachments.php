@@ -19,7 +19,7 @@ trait HasAttachments
 {
 
     /**
-     * get fields related to attachments
+     * Get fields related to attachments
      * @return array
      */
     abstract public function getAttachableFields(): array;

@@ -7,10 +7,13 @@ use DigitSoft\Attachments\Traits\HasAttachments;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Class AttachmentObserver
+ * Observer for model events
+ * @package DigitSoft\Attachments\Observers
+ */
 class AttachmentObserver
 {
-
-
     /**
      *  Save attachment when model is saved.
      *
