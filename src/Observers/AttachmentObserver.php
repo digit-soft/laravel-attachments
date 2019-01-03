@@ -15,6 +15,33 @@ use Illuminate\Support\Facades\Schema;
 class AttachmentObserver
 {
     /**
+     *  Remove attachment usages when model is saving and attachments updated.
+     *
+     * @param HasAttachments|Model $model
+     * @return void
+     */
+    public function saving(Model $model)
+    {
+        if ($model->exists) {
+            $attachmentFields = array_combine($model->getAttachableFields(), $model->getAttachableFields());
+            $updatedAttachmentFields = array_intersect_key($model->getDirty(), $attachmentFields);
+            $oldAttachmentIds = [];
+            if (!empty($updatedAttachmentFields)) {
+                foreach ($updatedAttachmentFields as $fieldName => $newId) {
+                    if (($oldId = $model->getOriginal($fieldName)) !== null) {
+                        $oldAttachmentIds[] = $oldId;
+                    }
+                }
+            }
+            if (!empty($oldAttachmentIds)) {
+                $model->attachmentUsages()
+                    ->whereIn('attachment_id', $oldAttachmentIds)
+                    ->delete();
+            }
+        }
+    }
+
+    /**
      *  Save attachment when model is saved.
      *
      * @param HasAttachments|Model $model
@@ -22,20 +49,15 @@ class AttachmentObserver
      */
     public function saved(Model $model)
     {
-        $models = [];
+        $modelIds = [];
         foreach ($model->getAttachableFields() as $attachableField) {
-
-            if (Schema::hasColumn($model->getTable(), $attachableField)) {
-
-                if ($attachment = Attachment::find($model->{$attachableField})) {
-
-                    $models[] = $attachment;
-
-                }
+            if (Schema::hasColumn($model->getTable(), $attachableField) && $model->{$attachableField} !== null) {
+                $modelIds[] = $model->{$attachableField};
             }
         }
 
-        if (!empty($models)) {
+        if (!empty($modelIds)) {
+            $models = Attachment::query()->whereIn('id', $modelIds)->get();
             $model->attachments()->saveMany($models);
         }
     }

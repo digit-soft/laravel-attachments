@@ -3,6 +3,7 @@
 namespace DigitSoft\Attachments;
 
 use DigitSoft\Attachments\Facades\Attachments;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\File;
 use Illuminate\Support\Arr;
@@ -12,22 +13,22 @@ use Illuminate\Support\Str;
  * DigitSoft\Attachments\Attachment
  *
  * @mixin \Eloquent
- * @property int                    $id ID
- * @property int|null               $user_id Author id
- * @property string                 $name File base name
- * @property string                 $name_original File base name original
- * @property string|null            $group File group and save path
- * @property bool                   $private Private flag
- * @property \Carbon\Carbon|null    $created_at File upload time
- * @property string                 $path File relative path
- * @property string                 $pathFull File full path
- * @property string                 $url File URL
- * @property string                 $urlRelative File relative URL
+ * @property int                               $id            ID
+ * @property int|null                          $user_id       Author id
+ * @property string                            $name          File base name
+ * @property string                            $name_original File base name original
+ * @property string|null                       $group         File group and save path
+ * @property bool                              $private       Private flag
+ * @property \Carbon\Carbon|null               $created_at    File upload time
+ * @property string                            $path          File relative path
+ * @property string                            $pathFull      File full path
+ * @property string                            $url           File URL
+ * @property string                            $urlRelative   File relative URL
  *
- * @property-read int|null          $imageWidth Image width
- * @property-read int|null          $imageHeight Image height
- * @property-read AttachmentUsage[] $usages Attachment usages
- * @property-read Model[]           $models Models using this attachment
+ * @property-read int|null                     $imageWidth    Image width
+ * @property-read int|null                     $imageHeight   Image height
+ * @property-read AttachmentUsage[]|Collection $usages        Attachment usages
+ * @property-read Model[]|Collection           $models        Models using this attachment
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereGroup($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereId($value)
