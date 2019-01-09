@@ -4,7 +4,6 @@ namespace DigitSoft\Attachments\Traits;
 
 use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentUsage;
-use DigitSoft\Attachments\Contracts\ModelAttacher;
 use DigitSoft\Attachments\Facades\Attachments;
 use DigitSoft\Attachments\Observers\AttachmentObserver;
 use Illuminate\Foundation\Auth\User;
