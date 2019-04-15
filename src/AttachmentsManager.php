@@ -138,7 +138,7 @@ class AttachmentsManager
      */
     public function getAttachmentByToken(string $token)
     {
-        list($attachmentId, $user) = $this->tokenManager()->get($token);
+        list($attachmentId) = $this->tokenManager()->get($token);
         return $attachmentId !== null ? Attachment::whereId($attachmentId)->first() : null;
     }
 
@@ -254,26 +254,31 @@ class AttachmentsManager
 
     /**
      * Cleanup DB from unused attachments
-     * @param int|null $expire_time
-     * @param bool     $onlyDb
+     * @param  int|null $expire_time Expire time for attachment
+     * @param  bool     $onlyDb      Remove only from DB
+     * @param  int|null $batchSize   Size of batch for query results
+     * @return int Removed count
      * @throws \Exception
      */
-    public function cleanUp($expire_time = null, $onlyDb = false)
+    public function cleanup($expire_time = null, $onlyDb = false, $batchSize = 200)
     {
+        $removedCount = 0;
         $expire_time = $expire_time ?? $this->config->get('attachments.expire_time');
         $timestamp = now()->subSeconds($expire_time);
         /** @var Attachment[] $attachments */
-        $attachments = Attachment::query()
+        $query = Attachment::query()
             ->whereDate('created_at', '<', $timestamp)
-            ->doesntHave('usages')
-            ->get();
-        foreach ($attachments as $attachment) {
+            ->doesntHave('usages');
+        $query->each(function ($attachment) use ($onlyDb, &$removedCount) {
+            /** @var Attachment $attachment */
             $attachmentPath = $attachment->path();
             if (!$onlyDb && ($storage = $attachment->storage()) !== null && $storage->exists($attachmentPath)) {
                 $storage->delete($attachmentPath);
             }
             $attachment->delete();
-        }
+            $removedCount++;
+        }, $batchSize);
+        return $removedCount;
     }
 
     /**

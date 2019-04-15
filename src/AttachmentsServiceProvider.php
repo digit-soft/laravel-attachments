@@ -2,6 +2,7 @@
 
 namespace DigitSoft\Attachments;
 
+use DigitSoft\Attachments\Commands\CleanupAttachmentsCommand;
 use DigitSoft\Attachments\Commands\CreateDirectoriesCommand;
 use DigitSoft\Attachments\Commands\CreateMigrationCommand;
 use Illuminate\Support\ServiceProvider;
@@ -82,10 +83,14 @@ class AttachmentsServiceProvider extends ServiceProvider
         $this->app->singleton('command.attachments.directories', function ($app) {
             return new CreateDirectoriesCommand($app['files'], $app['config']);
         });
+        $this->app->singleton('command.attachments.cleanup', function () {
+            return new CleanupAttachmentsCommand();
+        });
 
         $this->commands([
             'command.attachments.tables',
             'command.attachments.directories',
+            'command.attachments.cleanup',
         ]);
     }
 
@@ -98,6 +103,7 @@ class AttachmentsServiceProvider extends ServiceProvider
             'attachments',
             'command.attachments.tables',
             'command.attachments.directories',
+            'command.attachments.cleanup',
         ];
     }
 }
