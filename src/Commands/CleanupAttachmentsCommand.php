@@ -29,13 +29,10 @@ class CleanupAttachmentsCommand extends Command
     public function handle()
     {
         $removedCount = $this->attachmentsManager()->cleanup();
-        if ($this->getOutput()->isQuiet()) {
-            return;
-        }
         if ($removedCount) {
-            $this->getOutput()->success(sprintf('Removed %d attachments', $removedCount));
+            $this->info(sprintf('Removed %d attachments', $removedCount));
         } else {
-            $this->getOutput()->success('No attachments were removed');
+            $this->info('No attachments were removed');
         }
     }
 
