@@ -267,8 +267,17 @@ class AttachmentsManager
         $timestamp = now()->subSeconds($expire_time);
         /** @var Attachment[] $attachments */
         $query = Attachment::query()
-            ->whereDate('created_at', '<', $timestamp)
-            ->doesntHave('usages');
+            ->where(function ($queryDates) use ($timestamp) {
+                /** @var \Illuminate\Database\Eloquent\Builder $queryDates */
+                $queryDates->whereDate('created_at', '<', $timestamp)
+                    ->orWhere(function ($queryDatesEq) use ($timestamp) {
+                        /** @var \Illuminate\Database\Eloquent\Builder $queryDatesEq */
+                        $queryDatesEq->whereDate('created_at', '=', $timestamp)
+                            ->whereTime('created_at', '<', $timestamp);
+                    });
+            })
+            ->whereDoesntHave('usages')
+            ->oldest();
         $query->each(function ($attachment) use ($onlyDb, &$removedCount) {
             /** @var Attachment $attachment */
             $attachmentPath = $attachment->path();
