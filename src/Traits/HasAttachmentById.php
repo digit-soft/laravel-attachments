@@ -11,7 +11,6 @@ use DigitSoft\Attachments\Attachment;
  * @package DigitSoft\Attachments\Traits
  * @property string          $attachment_id_attribute Attachment ID db attribute (use it if you want to override attribute with attachment ID)
  * @property-read Attachment $attachment
- * @mixin \Eloquent
  */
 trait HasAttachmentById
 {
@@ -21,7 +20,7 @@ trait HasAttachmentById
      */
     public function attachment()
     {
-        $idAttribute = isset($this->attachment_id_attribute) ? $this->attachment_id_attribute : 'attachment_id';
+        $idAttribute = $this->attachment_id_attribute ?? 'attachment_id';
         return $this->belongsTo(Attachment::class, $idAttribute, 'id');
     }
 }
