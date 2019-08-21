@@ -2,12 +2,12 @@
 
 namespace DigitSoft\Attachments;
 
-use DigitSoft\Attachments\Facades\Attachments;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\File;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use DigitSoft\Attachments\Facades\Attachments;
 
 /**
  * DigitSoft\Attachments\Attachment
@@ -133,6 +133,18 @@ class Attachment extends Model
     {
         $file = $this->file();
         return $file ? $file->getSize() : null;
+    }
+
+    /**
+     * Get file extension.
+     *
+     * @return string|null
+     */
+    public function extension()
+    {
+        $file = $this->file();
+
+        return $file ? $file->getExtension() : null;
     }
 
     /**
