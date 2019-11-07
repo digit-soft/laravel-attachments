@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter getStoragePrivate()
  * @method static void routes()
  * @method static \DigitSoft\Attachments\TokenManager tokenManager()
- * @method static string getFileGroupRules(string $fileGroup)
+ * @method static string getFileGroupRules(string $fileGroup, $addBail = true)
  * @see \DigitSoft\Attachments\AttachmentsManager
  */
 class Attachments extends Facade

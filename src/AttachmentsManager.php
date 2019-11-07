@@ -2,18 +2,18 @@
 
 namespace DigitSoft\Attachments;
 
-use GuzzleHttp\Client as HttpClient;
-use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\File;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Config\Repository;
+use Illuminate\Http\UploadedFile;
+use GuzzleHttp\Client as HttpClient;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Http\File;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Testing\File as FileTest;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Class AttachmentsManager
@@ -46,6 +46,11 @@ class AttachmentsManager
      * @var array
      */
     protected $storageDiskNames = [];
+    /**
+     * File size limits cache
+     * @var array
+     */
+    protected $fileSizeLimitsByExt;
 
     /**
      * AttachmentsManager constructor.
@@ -192,7 +197,7 @@ class AttachmentsManager
     public function createFromFile($file, $group = null, $private = false)
     {
         if ($file instanceof UploadedFile || !$this->isInSaveDir($file->getRealPath())) {
-            list($nameOriginal, $file) = $this->saveFile($file, $group, $private);
+            [$nameOriginal, $file] = $this->saveFile($file, $group, $private);
         } else {
             $nameOriginal = $file->getFilename();
         }
@@ -369,11 +374,13 @@ class AttachmentsManager
      * Get file group rules.
      *
      * @param  string $fileGroup
+     * @param  bool   $addBail
      * @return array
      * @throws null
      */
-    public function getFileGroupRules(string $fileGroup)
+    public function getFileGroupRules($fileGroup = null, $addBail = true)
     {
+        $fileGroup = is_string($fileGroup) ? $fileGroup : '';
         $fileGroup = preg_replace('/[_\s]+/', '-', $fileGroup);
 
         $rules = [];
@@ -392,7 +399,89 @@ class AttachmentsManager
             }
         }
 
+        // Add bail into rules array
+        if ($addBail && ! empty($rules) && ! in_array('bail', $rules, true)) {
+            $rules[] = 'bail';
+        }
+
         return $rules;
+    }
+
+    /**
+     * Get file size limit(s).
+     *
+     * @param  string|null $extension
+     * @return array|int|null
+     */
+    public function fileSizeGetLimitByExt($extension = null)
+    {
+        if ($this->fileSizeLimitsByExt === null) {
+            $limitsRaw = $this->config->get('attachments.file_size_limits', []);
+            foreach ($limitsRaw as $row) {
+                [$ext, $limit] = $row;
+                $ext = is_array($ext) ? $ext : [$ext];
+                $limit = $this->fileSizeNormalizeValue($limit);
+                foreach ($ext as $extValue) {
+                    $this->fileSizeLimitsByExt[$extValue] = $limit;
+                }
+            }
+        }
+
+        // Look for value by extension
+        if ($extension !== null) {
+            $extension = mb_strtolower($extension);
+
+            return $this->fileSizeLimitsByExt[$extension] ?? $this->fileSizeLimitsByExt['*'] ?? null;
+        }
+
+        return $this->fileSizeLimitsByExt;
+    }
+
+    /**
+     * Normalize file size given is string format to count of bytes.
+     *
+     * @param  int|string $size
+     * @return float|int
+     */
+    public function fileSizeNormalizeValue($size)
+    {
+        if (is_numeric($size)) {
+            return $size;
+        }
+
+        // Parse string data like 150M or 20MB
+        if (is_string($size) && preg_match('/^((?:\d+(?:\s+)?))([KMGB])?B?$/i', $size, $matches)) {
+            $sizeNum = (int)preg_replace('/\D+/', '', $matches[1]);
+            $pref = mb_strtoupper($matches[2]);
+            $powers = ['B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']; // power for given suffix
+            if (($power = array_search($pref, $powers, true)) !== false) {
+                // If power = 0, then do nothing the size is already in bytes
+                $sizeNum = $power > 0 ? $sizeNum * (1024 ** $power) : $sizeNum;
+            }
+
+            return $sizeNum;
+        }
+
+        return (int)$size;
+    }
+
+    /**
+     * Format file size.
+     *
+     * @param  int $size
+     * @param  int $precision
+     * @return string
+     */
+    public function fileSizeStringifyValue(int $size, int $precision = 2)
+    {
+        $units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+
+        $bytes = max($size, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= 1024 ** $pow;
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
     /**
