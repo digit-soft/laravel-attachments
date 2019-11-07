@@ -8,6 +8,7 @@ use GuzzleHttp\RequestOptions;
 use Illuminate\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\File;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Testing\File as FileTest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Request;
@@ -365,6 +366,36 @@ class AttachmentsManager
     }
 
     /**
+     * Get file group rules.
+     *
+     * @param  string $fileGroup
+     * @return array
+     * @throws null
+     */
+    public function getFileGroupRules(string $fileGroup)
+    {
+        $fileGroup = preg_replace('/[_\s]+/', '-', $fileGroup);
+
+        $rules = [];
+        $rulesRaw = $this->config->get('attachments.group_rules.' . $fileGroup, null);
+        $rulesRaw = $rulesRaw ?? $this->config->get('attachments.group_rules.*', []);
+
+        foreach ($rulesRaw as $ruleData) {
+            // String rule ot instance
+            if (is_string($ruleData) || $ruleData instanceof Rule) {
+                $rules[] = $ruleData;
+            }
+            // Config array for rule creation
+            if (is_array($ruleData) && is_string($ruleData[0])) {
+                $params = $ruleData[1] ?? [];
+                $rules[] = app()->make($ruleData[0], $params);
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
      * Get storage by type
      * @param string $type
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
@@ -418,8 +449,8 @@ class AttachmentsManager
         $host = $this->config->get('attachments.url.host');
         $scheme = $scheme ?? Request::getScheme();
         $host = $host ?? Request::getHost();
-        $url = $scheme . '://' . $host;
-        return $url;
+
+        return $scheme . '://' . $host;
     }
 
     /**

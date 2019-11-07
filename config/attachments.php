@@ -104,4 +104,17 @@ return [
         'width' => 1920,
         'height' => 1280
     ],
+    /*
+    |-------------------------------------------------------
+    | Rules list per file group
+    |-------------------------------------------------------
+    | You can specify rules for each file group:
+    | 'group-name' => [
+    |   'file',
+    |   [RuleClassName::class, ['constructor_parameter_name' => 'PARAMETER_VALUE']] // For app()->make()
+    | ]
+    */
+    'group_rules' => [
+        '*' => [], // Fallback rules
+    ],
 ];
