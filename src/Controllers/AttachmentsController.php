@@ -2,15 +2,16 @@
 
 namespace DigitSoft\Attachments\Controllers;
 
-use DigitSoft\Attachments\Attachment;
-use DigitSoft\Attachments\AttachmentsManager;
-use DigitSoft\Attachments\Facades\Attachments;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
+use DigitSoft\Attachments\Attachment;
+use DigitSoft\Attachments\AttachmentsManager;
+use DigitSoft\Attachments\Facades\Attachments;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use DigitSoft\Attachments\Validation\Rules\AttachmentUploadSizeByExtRule;
 
 /**
  * Class AttachmentsController.
@@ -137,7 +138,7 @@ class AttachmentsController extends Controller
     protected function uploadFileGeneral(Request $request, $group = null, $name = 'file', $private = false)
     {
         $file = $request->file($name);
-        if (!$file || !$this->validateUploadSize($file)) {
+        if (! $file || ! $this->validateUploadSize($file)) {
             return null;
         }
         $attachment = Attachments::createFromFile($file, $group, $private);
@@ -185,28 +186,14 @@ class AttachmentsController extends Controller
 
     /**
      * Validate uploaded file size
-     * @param UploadedFile $file
+     *
+     * @param  UploadedFile $file
      * @return bool
      */
     protected function validateUploadSize($file)
     {
-        $limits = config('attachments.file_size_limit', []);
-        $fileSize = $file->getSize();
+        $rule = new AttachmentUploadSizeByExtRule();
 
-        if (($fileMimeType = $file->getMimeType()) !== null) {
-            foreach ($limits as $mimePattern => $limit) {
-                // Mime type rule exactly matches file mime type and file size less or equals to limit
-                // than do not check other rules. This works if mime in config placed before any matching
-                // wildcard pattern
-                if ($mimePattern === $fileMimeType && $fileSize <= $limit) {
-                    return true;
-                }
-                if (Str::is($mimePattern, $fileMimeType) && $fileSize > $limit) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
+        return $rule->passes('file', $file);
     }
 }
