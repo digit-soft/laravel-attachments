@@ -22,7 +22,7 @@ use Illuminate\Http\Testing\File as FileTest;
 class AttachmentsManager
 {
     const STORAGE_PRIVATE = 'private';
-    const STORAGE_PUBLIC = 'public';
+    const STORAGE_PUBLIC  = 'public';
 
     const ROUTE_PRIVATE_UPLOAD          = 'attachments.upload.private';
     const ROUTE_PRIVATE_UPLOAD_MULTIPLE = 'attachments.upload.private.multiple';
@@ -133,8 +133,8 @@ class AttachmentsManager
         }
 
         $relUrl = url()->route(static::ROUTE_PRIVATE_DOWNLOAD, ['token' => $token], false);
-        $url = $this->getUrlAbsoluteBase() . '/' . ltrim($relUrl, '/');
-        return $url;
+
+        return $this->getUrlAbsoluteBase() . '/' . ltrim($relUrl, '/');
     }
 
     /**
@@ -144,7 +144,8 @@ class AttachmentsManager
      */
     public function getAttachmentByToken(string $token)
     {
-        list($attachmentId) = $this->tokenManager()->get($token);
+        [$attachmentId] = $this->tokenManager()->get($token);
+
         return $attachmentId !== null ? Attachment::whereId($attachmentId)->first() : null;
     }
 
@@ -170,8 +171,8 @@ class AttachmentsManager
             $baseName = '';
         }
         $uploadedFile = new UploadedFile($tmpFileName, $baseName);
-        $attachment = $this->createFromFile($uploadedFile, $group, $private);
-        return $attachment;
+
+        return $this->createFromFile($uploadedFile, $group, $private);
     }
 
     /**
@@ -184,6 +185,7 @@ class AttachmentsManager
     public function createFromPath($filePath, $group = null, $private = false)
     {
         $file = new File($filePath);
+
         return $this->createFromFile($file, $group, $private);
     }
 
@@ -208,6 +210,7 @@ class AttachmentsManager
             'private' => $private,
             'user_id' => auth()->id(),
         ];
+
         return new Attachment($data);
     }
 
@@ -224,13 +227,14 @@ class AttachmentsManager
         $nameOriginal = $file instanceof UploadedFile && $file->getClientOriginalName() ? $file->getClientOriginalName() : $file->getFilename();
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
-        $nameSaved = $storage->putFile($savePath, $file);
-        if (!$nameSaved) {
+        $nameSaved = $storage->putFileAs($savePath, $file, $this->getFileSaveName($file));
+        if (! $nameSaved) {
             return [null, null];
         }
         $realPath = $this->convertPathToReal($nameSaved);
         chmod($realPath, 0666);
         $newFile = new File($realPath);
+
         return [$nameOriginal, $newFile];
     }
 
@@ -249,12 +253,13 @@ class AttachmentsManager
         $savePath = $this->getSavePath($storageType, $group);
         rewind($resource);
         $nameSaved = $storage->put($savePath, $resource);
-        if (!$nameSaved) {
+        if (! $nameSaved) {
             return [null, null];
         }
         $realPath = $this->convertPathToReal($nameSaved);
         chmod($realPath, 0666);
         $newFile = new File($realPath);
+
         return [$fileName, $newFile];
     }
 
@@ -485,21 +490,24 @@ class AttachmentsManager
     }
 
     /**
-     * Get storage by type
-     * @param string $type
+     * Get storage by type.
+     *
+     * @param  string $type
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
      */
     protected function getStorage($type = self::STORAGE_PUBLIC)
     {
         $storageConfigKey = 'attachments.' . $type . '_storage';
         $storageDiskName = $this->storageDiskNames[$type] ?? $this->config->get($storageConfigKey, 'local');
+
         return Storage::disk($storageDiskName);
     }
 
     /**
-     * Get public URL
-     * @param Attachment $attachment
-     * @param bool       $absolute
+     * Get public URL.
+     *
+     * @param  Attachment $attachment
+     * @param  bool       $absolute
      * @return string
      */
     protected function getUrlPublic(Attachment $attachment, $absolute = true)
@@ -518,9 +526,10 @@ class AttachmentsManager
     }
 
     /**
-     * Get private URL
-     * @param Attachment $attachment
-     * @param bool       $absolute
+     * Get private URL.
+     *
+     * @param  Attachment $attachment
+     * @param  bool       $absolute
      * @return \Illuminate\Contracts\Routing\UrlGenerator|string
      */
     protected function getUrlPrivateObtain(Attachment $attachment, $absolute = true)
@@ -529,7 +538,8 @@ class AttachmentsManager
     }
 
     /**
-     * Get absolute base URL
+     * Get absolute base URL.
+     *
      * @return string
      */
     protected function getUrlAbsoluteBase()
@@ -552,6 +562,7 @@ class AttachmentsManager
     {
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
         $savePath = $this->getSavePath($storageType, null, true);
+
         return strpos($path, $savePath) === 0;
     }
 
@@ -562,6 +573,7 @@ class AttachmentsManager
     protected function convertPathToReal($storagePath)
     {
         $ds = DIRECTORY_SEPARATOR;
+
         return app()->storagePath() . $ds . 'app' . $ds . ltrim($storagePath, $ds);
     }
 
@@ -572,6 +584,28 @@ class AttachmentsManager
     protected function convertPathToStorage($realPath)
     {
         $pathStorage = app()->storagePath() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
+
         return strpos($realPath, $pathStorage) === 0 ? substr($realPath, strlen($pathStorage)) : $realPath;
+    }
+
+    /**
+     * Get file name for save into the storage.
+     *
+     * @param  UploadedFile $file
+     * @return string
+     */
+    protected function getFileSaveName($file)
+    {
+        $hashName = $file->hashName();
+        if (($ext = $file->getExtension()) === '') {
+            return $hashName;
+        }
+
+        if (count($nameExploded = explode('.', $hashName)) > 2) {
+            array_pop($nameExploded);
+        }
+        $nameExploded[] = $ext;
+
+        return implode('.', $nameExploded);
     }
 }
