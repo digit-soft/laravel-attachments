@@ -601,7 +601,7 @@ class AttachmentsManager
             return $hashName;
         }
 
-        if (count($nameExploded = explode('.', $hashName)) > 2) {
+        if (count($nameExploded = explode('.', $hashName)) >= 2) {
             array_pop($nameExploded);
         }
         $nameExploded[] = $ext;
