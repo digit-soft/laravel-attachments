@@ -2,11 +2,11 @@
 
 namespace DigitSoft\Attachments\Traits;
 
+use Illuminate\Foundation\Auth\User;
 use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Facades\Attachments;
 use DigitSoft\Attachments\Observers\AttachmentObserver;
-use Illuminate\Foundation\Auth\User;
 
 /**
  * Trait HasAttachments
@@ -16,9 +16,9 @@ use Illuminate\Foundation\Auth\User;
  */
 trait HasAttachments
 {
-
     /**
-     * Get fields related to attachments
+     * Get fields related to attachments.
+     *
      * @return array
      */
     abstract public function getAttachableFields(): array;
@@ -40,7 +40,8 @@ trait HasAttachments
     }
 
     /**
-     * Get used attachments
+     * Get used attachments.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function attachments()
@@ -53,7 +54,8 @@ trait HasAttachments
     }
 
     /**
-     * Get attachment usages
+     * Get attachment usages.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
     public function attachmentUsages()
@@ -62,7 +64,8 @@ trait HasAttachments
     }
 
     /**
-     * Add usage to attachment
+     * Add usage to attachment.
+     *
      * @param Attachment|int $attachment
      */
     public function attachmentUse($attachment)
@@ -77,7 +80,8 @@ trait HasAttachments
     }
 
     /**
-     * Fallback private attachment download check if model has no Policy
+     * Fallback private attachment download check if model has no Policy.
+     *
      * @param User       $user
      * @param Attachment $attachment
      * @return bool
@@ -88,7 +92,8 @@ trait HasAttachments
     }
 
     /**
-     * Get group for usage
+     * Get group for usage.
+     *
      * @return string
      */
     private function getUsageModelType()
@@ -96,11 +101,13 @@ trait HasAttachments
         if ($this->attachments_model_type !== null) {
             return $this->attachments_model_type;
         }
+
         return get_called_class();
     }
 
     /**
-     * Get ID for usage
+     * Get ID for usage.
+     *
      * @return string|int
      */
     private function getUsageModelId()

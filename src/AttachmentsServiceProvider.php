@@ -2,6 +2,7 @@
 
 namespace DigitSoft\Attachments;
 
+use DigitSoft\Attachments\Traits\WithAttachmentsManager;
 use DigitSoft\Attachments\Commands\CleanupAttachmentsCommand;
 use DigitSoft\Attachments\Commands\CreateDirectoriesCommand;
 use DigitSoft\Attachments\Commands\CreateMigrationCommand;
@@ -51,7 +52,11 @@ class AttachmentsServiceProvider extends ServiceProvider
     protected function registerManager()
     {
         $this->app->singleton('attachments', function ($app) {
-            return new AttachmentsManager($app['files'], $app['config']);
+            $instance = new AttachmentsManager($app['files'], $app['config']);
+
+            WithAttachmentsManager::$_attachmentsManagerInstance = $instance;
+
+            return $instance;
         });
     }
 
