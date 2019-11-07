@@ -490,6 +490,21 @@ class AttachmentsManager
     }
 
     /**
+     * Get uploaded file extension.
+     *
+     * @param  UploadedFile $file
+     * @return string
+     */
+    public function getUploadedFileExtension($file)
+    {
+        $ext = $file->getClientOriginalExtension();
+        $ext = $ext !== '' ? $ext : $file->clientExtension();
+        $ext = $ext !== '' ? $ext : $file->extension();
+
+        return is_string($ext) ? mb_strtolower($ext) : '';
+    }
+
+    /**
      * Get storage by type.
      *
      * @param  string $type
@@ -597,7 +612,7 @@ class AttachmentsManager
     protected function getFileSaveName($file)
     {
         $hashName = $file->hashName();
-        if (($ext = $file->getExtension()) === '') {
+        if (($ext = $this->getUploadedFileExtension($file)) === '') {
             return $hashName;
         }
 

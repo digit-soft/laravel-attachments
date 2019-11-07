@@ -4,6 +4,7 @@ namespace DigitSoft\Attachments\Validation\Rules;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Contracts\Validation\Rule;
+use DigitSoft\Attachments\Traits\WithAttachmentsManager;
 
 /**
  * Validation rule for `Attachment` upload process.
@@ -21,6 +22,8 @@ class AttachmentUploadExtRule implements Rule
     const PRESET_DOCUMENTS_TABLES           = 'docs-xls';
     const PRESET_DOCUMENTS_PRESENTATIONS    = 'docs-ppt';
     const PRESET_DOCUMENTS_OTHER            = 'docs-other';
+
+    use WithAttachmentsManager;
 
     /**
      * Permitted extensions.
@@ -41,7 +44,7 @@ class AttachmentUploadExtRule implements Rule
         self::PRESET_DOCUMENTS_OTHER => ['xml', 'txt'],
         self::PRESET_DOCUMENTS_ALL => [], // will be filled on class boot
         self::PRESET_MEDIA_VIDEO => ['mp4', 'mpg'],
-        self::PRESET_MEDIA_AUDIO => ['acc', 'ogg', 'mp3', 'mp4'],
+        self::PRESET_MEDIA_AUDIO => ['aac', 'ogg', 'mp3', 'mp4'],
         self::PRESET_ALL_PERMITTED => [], // will be filled on class boot
     ];
 
@@ -73,11 +76,14 @@ class AttachmentUploadExtRule implements Rule
      */
     public function passes($attribute, $value)
     {
-        if (! $value instanceof UploadedFile || ! is_string($ext = $value->getExtension())) {
+        if (
+            ! $value instanceof UploadedFile
+            || ! is_string($ext = static::attachmentsManager()->getUploadedFileExtension($value))
+        ) {
             return false;
         }
 
-        return in_array(mb_strtolower($ext), $this->extensions, true);
+        return in_array($ext, $this->extensions, true);
     }
 
     /**

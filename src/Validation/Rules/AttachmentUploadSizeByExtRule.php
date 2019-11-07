@@ -28,7 +28,7 @@ class AttachmentUploadSizeByExtRule implements Rule
         if (! $value instanceof UploadedFile) {
             return false;
         }
-        $ext = mb_strtolower($value->getExtension());
+        $ext = mb_strtolower(static::attachmentsManager()->getUploadedFileExtension($value));
         $this->limit = static::attachmentsManager()->fileSizeGetLimitByExt($ext);
 
         return $value->getSize() <= $this->limit;
