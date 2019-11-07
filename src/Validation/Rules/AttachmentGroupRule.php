@@ -5,6 +5,9 @@ namespace DigitSoft\Attachments\Validation\Rules;
 use DigitSoft\Attachments\Attachment;
 use Illuminate\Contracts\Validation\Rule;
 
+/**
+ * Validates passed attachment ID for permitted groups.
+ */
 class AttachmentGroupRule implements Rule
 {
     protected $groups;
