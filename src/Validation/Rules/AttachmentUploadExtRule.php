@@ -41,7 +41,7 @@ class AttachmentUploadExtRule implements Rule
         self::PRESET_DOCUMENTS_TEXT => ['doc', 'docx', 'rtf', 'odt', 'pdf'],
         self::PRESET_DOCUMENTS_TABLES => ['xls', 'xlsx', 'ods'],
         self::PRESET_DOCUMENTS_PRESENTATIONS => ['ppt', 'pptx'],
-        self::PRESET_DOCUMENTS_OTHER => ['xml', 'txt'],
+        self::PRESET_DOCUMENTS_OTHER => ['xml', 'txt'], // not included in DOCUMENTS_ALL
         self::PRESET_DOCUMENTS_ALL => [], // will be filled on class boot
         self::PRESET_MEDIA_VIDEO => ['mp4', 'mpg'],
         self::PRESET_MEDIA_AUDIO => ['aac', 'ogg', 'mp3', 'mp4'],
