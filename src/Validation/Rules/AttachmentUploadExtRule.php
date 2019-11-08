@@ -37,7 +37,7 @@ class AttachmentUploadExtRule implements Rule
      * @var array
      */
     protected static $presetsExtensions = [
-        self::PRESET_IMAGES => ['jpg', 'jpeg', 'png', 'gif', 'tiff'],
+        self::PRESET_IMAGES => ['jpg', 'jpeg', 'png', 'gif'],
         self::PRESET_DOCUMENTS_TEXT => ['doc', 'docx', 'rtf', 'odt', 'pdf'],
         self::PRESET_DOCUMENTS_TABLES => ['xls', 'xlsx', 'ods'],
         self::PRESET_DOCUMENTS_PRESENTATIONS => ['ppt', 'pptx'],
