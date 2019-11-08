@@ -15,6 +15,7 @@ class AttachmentUploadExtension implements Rule
 {
     const PRESET_ALL_PERMITTED              = 'all';
     const PRESET_IMAGES                     = 'images';
+    const PRESET_IMAGES_OTHER               = 'images-extended';
     const PRESET_MEDIA_VIDEO                = 'media-video';
     const PRESET_MEDIA_AUDIO                = 'media-audio';
     const PRESET_DOCUMENTS_ALL              = 'docs';
@@ -38,6 +39,7 @@ class AttachmentUploadExtension implements Rule
      */
     protected static $presetsExtensions = [
         self::PRESET_IMAGES => ['jpg', 'jpeg', 'png', 'gif'],
+        self::PRESET_IMAGES_OTHER => ['tif'],
         self::PRESET_DOCUMENTS_TEXT => ['doc', 'docx', 'rtf', 'odt', 'pdf'],
         self::PRESET_DOCUMENTS_TABLES => ['xls', 'xlsx', 'ods'],
         self::PRESET_DOCUMENTS_PRESENTATIONS => ['ppt', 'pptx'],
@@ -98,6 +100,20 @@ class AttachmentUploadExtension implements Rule
     }
 
     /**
+     * Add some permitted extensions to rule.
+     *
+     * @param  string[]|string $extensions
+     * @return $this
+     */
+    public function withExtensions($extensions)
+    {
+        $extensions = is_array($extensions) ? $extensions : [$extensions];
+        $this->extensions = array_unique(array_merge($this->extensions, $extensions));
+
+        return $this;
+    }
+
+    /**
      * Add all image extensions.
      *
      * @return $this
@@ -105,6 +121,16 @@ class AttachmentUploadExtension implements Rule
     public function withImages()
     {
         return $this->addExtensionsFromPresets(static::PRESET_IMAGES);
+    }
+
+    /**
+     * Add all image extensions + other.
+     *
+     * @return $this
+     */
+    public function withImagesExtended()
+    {
+        return $this->addExtensionsFromPresets([static::PRESET_IMAGES ,static::PRESET_IMAGES_OTHER]);
     }
 
     /**
@@ -135,6 +161,16 @@ class AttachmentUploadExtension implements Rule
     public function withDocuments()
     {
         return $this->addExtensionsFromPresets(static::PRESET_DOCUMENTS_ALL);
+    }
+
+    /**
+     * Add all `documents` extensions + other.
+     *
+     * @return $this
+     */
+    public function withDocumentsExtended()
+    {
+        return $this->addExtensionsFromPresets([static::PRESET_DOCUMENTS_ALL, static::PRESET_DOCUMENTS_OTHER]);
     }
 
     /**
