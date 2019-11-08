@@ -497,9 +497,10 @@ class AttachmentsManager
      */
     public function getUploadedFileExtension($file)
     {
-        $ext = $file->getClientOriginalExtension();
-        $ext = $ext !== '' ? $ext : $file->clientExtension();
-        $ext = $ext !== '' ? $ext : $file->extension();
+        $ext = method_exists($file, 'getExtension') ? $file->getExtension() : '';
+        $ext = $ext === '' && method_exists($file, 'getClientOriginalExtension') ? $file->getClientOriginalExtension() : $ext;
+        $ext = $ext === '' ? $file->clientExtension() : $ext;
+        $ext = $ext === '' ? $file->extension() : $ext;
 
         return is_string($ext) ? mb_strtolower($ext) : '';
     }
