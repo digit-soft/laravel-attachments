@@ -7,7 +7,7 @@ use DigitSoft\Attachments\Attachment;
 /**
  * Validates passed attachment ID for permitted extensions.
  */
-class AttachmentExtRule extends AttachmentUploadExtRule
+class AttachmentExtension extends AttachmentUploadExtension
 {
     /**
      * Determine if the validation rule passes.

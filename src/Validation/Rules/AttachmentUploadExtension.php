@@ -11,7 +11,7 @@ use DigitSoft\Attachments\Traits\WithAttachmentsManager;
  *
  * Validates extension of the file.
  */
-class AttachmentUploadExtRule implements Rule
+class AttachmentUploadExtension implements Rule
 {
     const PRESET_ALL_PERMITTED              = 'all';
     const PRESET_IMAGES                     = 'images';

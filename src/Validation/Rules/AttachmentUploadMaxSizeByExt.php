@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Contracts\Validation\Rule;
 use DigitSoft\Attachments\Traits\WithAttachmentsManager;
 
-class AttachmentUploadSizeByExtRule implements Rule
+class AttachmentUploadMaxSizeByExt implements Rule
 {
     use WithAttachmentsManager;
 

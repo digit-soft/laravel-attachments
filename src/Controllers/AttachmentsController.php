@@ -11,7 +11,7 @@ use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentsManager;
 use DigitSoft\Attachments\Facades\Attachments;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use DigitSoft\Attachments\Validation\Rules\AttachmentUploadSizeByExtRule;
+use DigitSoft\Attachments\Validation\Rules\AttachmentUploadMaxSizeByExt;
 
 /**
  * Class AttachmentsController.
@@ -192,7 +192,7 @@ class AttachmentsController extends Controller
      */
     protected function validateUploadSize($file)
     {
-        $rule = new AttachmentUploadSizeByExtRule();
+        $rule = new AttachmentUploadMaxSizeByExt();
 
         return $rule->passes('file', $file);
     }
