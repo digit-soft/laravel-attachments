@@ -6,7 +6,7 @@ use DigitSoft\Attachments\Attachment;
 use Illuminate\Contracts\Validation\Rule;
 use DigitSoft\Attachments\Traits\WithAttachmentsManager;
 
-class AttachmentSizeRule implements Rule
+class AttachmentMaxSizeRule implements Rule
 {
     use WithAttachmentsManager;
     /**
