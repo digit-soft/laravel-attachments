@@ -69,7 +69,8 @@ class Attachment extends Model
     protected $_file;
 
     /**
-     * Get path
+     * Get path.
+     *
      * @return string
      */
     public function getPathAttribute()
@@ -78,7 +79,8 @@ class Attachment extends Model
     }
 
     /**
-     * Get full path
+     * Get full path.
+     *
      * @return string
      */
     public function getPathFullAttribute()
@@ -111,27 +113,32 @@ class Attachment extends Model
     public function mime()
     {
         $file = $this->file();
+
         return $file ? $file->getMimeType() : null;
     }
 
     /**
-     * Check that mime type follows given pattern
-     * @param string $expression
+     * Check that mime type follows given pattern.
+     *
+     * @param  string $expression
      * @return bool
      */
     public function isMimeLike(string $expression = '*')
     {
         $mime = $this->mime();
+
         return $mime !== null ? Str::is($expression, $mime) : false;
     }
 
     /**
-     * Get file size
+     * Get file size.
+     *
      * @return int|null
      */
     public function size()
     {
         $file = $this->file();
+
         return $file ? $file->getSize() : null;
     }
 
@@ -148,8 +155,9 @@ class Attachment extends Model
     }
 
     /**
-     * Get file object
-     * @param bool $flush
+     * Get file object.
+     *
+     * @param  bool $flush
      * @return File|null
      */
     public function file($flush = false)
@@ -157,31 +165,37 @@ class Attachment extends Model
         if (($flush || $this->_file === null) && $this->name !== null) {
             $this->_file = new File($this->path(true));
         }
+
         return $this->_file;
     }
 
     /**
-     * Get image width
+     * Get image width.
+     *
      * @return int|null
      */
     public function getImageWidthAttribute()
     {
-        list($width,) = $this->getImageDimensions();
+        [$width,] = $this->getImageDimensions();
+
         return $width;
     }
 
     /**
-     * Get image height
+     * Get image height.
+     *
      * @return int|null
      */
     public function getImageHeightAttribute()
     {
-        list(, $height) = $this->getImageDimensions();
+        [, $height] = $this->getImageDimensions();
+
         return $height;
     }
 
     /**
-     * Get image dimensions array
+     * Get image dimensions array.
+     *
      * @return array
      */
     protected function getImageDimensions()
@@ -190,18 +204,21 @@ class Attachment extends Model
             $data = $this->isMimeLike('image/*') ? getimagesize($this->pathFull) : false;
             $this->_imageDimensions = !empty($data) ? [$data[0], $data[1]] : [null, null];
         }
+
         return $this->_imageDimensions;
     }
 
     /**
-     * Get file path
-     * @param bool $full
+     * Get file path.
+     *
+     * @param  bool $full
      * @return string
      */
     public function path($full = false)
     {
         $storageType = $this->private ? AttachmentsManager::STORAGE_PRIVATE : AttachmentsManager::STORAGE_PUBLIC;
         $dirPath = Attachments::getSavePath($storageType, $this->group, $full);
+
         return $dirPath . DIRECTORY_SEPARATOR . $this->name;
     }
 
