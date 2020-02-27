@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use DigitSoft\Attachments\Facades\Attachments;
+use DigitSoft\Attachments\Traits\WithImageConversion;
 
 /**
  * DigitSoft\Attachments\Attachment
@@ -40,6 +41,8 @@ use DigitSoft\Attachments\Facades\Attachments;
 class Attachment extends Model
 {
     const UPDATED_AT = null;
+
+    use WithImageConversion;
 
     protected $fillable = ['user_id', 'name', 'name_original', 'group', 'private', 'created_at'];
 
