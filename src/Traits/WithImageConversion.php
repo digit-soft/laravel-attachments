@@ -39,6 +39,7 @@ trait WithImageConversion
         }
 
         $storage->delete($oldPath);
+        $this->file(true);
 
         return true;
     }
