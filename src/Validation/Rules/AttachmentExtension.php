@@ -18,8 +18,9 @@ class AttachmentExtension extends AttachmentUploadExtension
      */
     public function passes($attribute, $value)
     {
+        $id = (int)$value;
         /** @var Attachment|null $model */
-        if (! is_int($value) || ($model = Attachment::find($value)) === null) {
+        if (! is_int($id) || $id <= 0 || ($model = Attachment::find($id)) === null) {
             return false;
         }
 
