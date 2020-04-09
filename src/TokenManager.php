@@ -2,6 +2,7 @@
 
 namespace DigitSoft\Attachments;
 
+use Illuminate\Support\Str;
 use DigitSoft\Attachments\Traits\TokenChecksAccess;
 use DigitSoft\Attachments\Traits\TokenStoresInRedis;
 use Illuminate\Foundation\Auth\User;
@@ -132,21 +133,21 @@ class TokenManager
     }
 
     /**
-     * Generate token string
+     * Generate token string.
      * @return string
      */
     protected function generateTokenStr()
     {
-        $randomStr = str_random($this->tokenLength);
+        $randomStr = Str::random($this->tokenLength);
         $hash = hash('sha256', $randomStr);
         $hashLn = 64; //for sha256 (256/4)
         for ($i = 0; $i < $hashLn; $i++) {
-            if (!is_numeric($hash[$i]) && rand(0, 1) % 2) {
+            if (!is_numeric($hash[$i]) && random_int(0, 1) % 2) {
                 $hash[$i] = strtoupper($hash[$i]);
             }
         }
         $pos = ceil($this->tokenLength / 2);
-        $tokenStr = substr($randomStr, 0, $pos) . $hash . substr($randomStr, $pos);
-        return $tokenStr;
+
+        return substr($randomStr, 0, $pos) . $hash . substr($randomStr, $pos);
     }
 }
