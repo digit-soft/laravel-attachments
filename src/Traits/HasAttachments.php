@@ -70,6 +70,7 @@ trait HasAttachments
      */
     public function attachmentUse($attachment)
     {
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
         $id = $this->getUsageModelId();
         $type = $this->getUsageModelType();
@@ -77,6 +78,23 @@ trait HasAttachments
             return;
         }
         Attachments::addUsage($attachment, $id, $type);
+    }
+
+    /**
+     * Remove attachment usage from this model.
+     *
+     * @param Attachment|int $attachment
+     */
+    public function attachmentForgetUsage($attachment)
+    {
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
+        $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
+        $id = $this->getUsageModelId();
+        $type = $this->getUsageModelType();
+        if ($id === null || $attachment === null) {
+            return;
+        }
+        Attachments::removeUsage($attachment, $id, $type);
     }
 
     /**
