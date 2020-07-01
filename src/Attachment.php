@@ -146,6 +146,21 @@ class Attachment extends Model
     }
 
     /**
+     * Get readable file size.
+     *
+     * @param  int $precision
+     * @return int|null
+     */
+    public function sizeHuman($precision = 2)
+    {
+        if (($size = $this->size()) === null) {
+            return null;
+        }
+
+        return Attachments::fileSizeStringifyValue($size, $precision);
+    }
+
+    /**
      * Get file extension.
      *
      * @return string|null
