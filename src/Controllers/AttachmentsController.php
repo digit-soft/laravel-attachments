@@ -141,7 +141,7 @@ class AttachmentsController extends Controller
         if (! $file || ! $this->validateUploadSize($file)) {
             return null;
         }
-        $attachment = Attachments::createFromFile($file, $group, $private);
+        $attachment = Attachments::createFromFile($file, $group, $private, auth()->id());
         $success = $attachment->save();
         return $success ? $attachment : null;
     }
@@ -165,7 +165,7 @@ class AttachmentsController extends Controller
                 $filesData[$key] = null;
                 continue;
             }
-            $attachment = Attachments::createFromFile($file, $group, $private);
+            $attachment = Attachments::createFromFile($file, $group, $private, auth()->id());
             $filesData[$key] = $attachment->save() ? $attachment->toArray() : null;
         }
         return $filesData;

@@ -151,12 +151,14 @@ class AttachmentsManager
 
     /**
      * Create an attachment from remote file URL
-     * @param string      $fileUrl
-     * @param string|null $group
-     * @param bool        $private
+     *
+     * @param  string      $fileUrl
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
      * @return Attachment|null
      */
-    public function createFromUrl($fileUrl, $group = null, $private = false)
+    public function createFromUrl($fileUrl, $group = null, $private = false, $creatorId = null)
     {
         $client = new HttpClient(['verify' => false]);
         $tmpFileName = tempnam(sys_get_temp_dir(), 'attDl');
@@ -172,31 +174,35 @@ class AttachmentsManager
         }
         $uploadedFile = new UploadedFile($tmpFileName, $baseName);
 
-        return $this->createFromFile($uploadedFile, $group, $private);
+        return $this->createFromFile($uploadedFile, $group, $private, $creatorId);
     }
 
     /**
      * Create an attachment from file path
-     * @param string      $filePath
-     * @param string|null $group
-     * @param bool        $private
+     *
+     * @param  string      $filePath
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
      * @return Attachment
      */
-    public function createFromPath($filePath, $group = null, $private = false)
+    public function createFromPath($filePath, $group = null, $private = false, $creatorId = null)
     {
         $file = new File($filePath);
 
-        return $this->createFromFile($file, $group, $private);
+        return $this->createFromFile($file, $group, $private, $creatorId);
     }
 
     /**
      * Create attachment from file object
-     * @param File|UploadedFile|FileTest $file
-     * @param string|null                $group
-     * @param bool                       $private
+     *
+     * @param  File|UploadedFile|FileTest $file
+     * @param  string|null                $group
+     * @param  bool                       $private
+     * @param  int|null                   $creatorId
      * @return Attachment
      */
-    public function createFromFile($file, $group = null, $private = false)
+    public function createFromFile($file, $group = null, $private = false, $creatorId = null)
     {
         if ($file instanceof UploadedFile || !$this->isInSaveDir($file->getRealPath())) {
             [$nameOriginal, $file] = $this->saveFile($file, $group, $private);
@@ -208,7 +214,7 @@ class AttachmentsManager
             'name_original' => $nameOriginal,
             'group' => $group,
             'private' => $private,
-            'user_id' => auth()->id(),
+            'user_id' => $creatorId,
         ];
 
         return new Attachment($data);
