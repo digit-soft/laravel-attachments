@@ -6,12 +6,12 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * Class Attachments
- * @package DigitSoft\Attachments\Facades
+ *
  * @method static \DigitSoft\Attachments\Attachment createFromUrl(string $fileUrl, $group = null, $private = false, $creatorId = null)
  * @method static \DigitSoft\Attachments\Attachment createFromPath(string $filePath, $group = null, $private = false, $creatorId = null)
  * @method static \DigitSoft\Attachments\Attachment createFromFile(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $file, $group = null, $private = false, $creatorId = null)
  * @method static array saveFile(\Illuminate\Http\UploadedFile $uploadedFile, $group, $private = false)
- * @method static void addUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
+ * @method static void addUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type, $tag = 'default')
  * @method static void removeUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
  * @method static bool hasUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)
  * @method static string getUrl(\DigitSoft\Attachments\Attachment $attachment, $absolute = true)

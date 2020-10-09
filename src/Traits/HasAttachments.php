@@ -6,28 +6,38 @@ use Illuminate\Foundation\Auth\User;
 use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Facades\Attachments;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use DigitSoft\Attachments\Observers\AttachmentObserver;
 
 /**
  * Trait HasAttachments
- * @package DigitSoft\Attachments\Traits
- * @property string       $primaryKey
- * @property Attachment[] $attachments
+ *
+ * @property string                                                     $primaryKey
+ * @property Attachment[]|\Illuminate\Database\Eloquent\Collection      $attachments
+ * @property AttachmentUsage[]|\Illuminate\Database\Eloquent\Collection $attachmentUsages
  */
 trait HasAttachments
 {
+    private static $useMorphMap;
+
     /**
      * Get fields related to attachments.
      *
      * @return array
      */
-    abstract public function getAttachableFields(): array;
+    abstract public function getAttachableFields();
 
     /**
-     * Custom model type name (must be registered for morphing)
-     * @var string|null
+     * Get fields related to attachments, which should be collected, not really model attributes.
+     *
+     * For example nested ones: ['blocks.test.attachment_id']
+     *
+     * @return array
      */
-    protected $attachments_model_type;
+    public function getCollectableAttachableFields()
+    {
+        return [];
+    }
 
     /**
      *  Register Model observer.
@@ -46,11 +56,9 @@ trait HasAttachments
      */
     public function attachments()
     {
-        return $this->morphToMany(
-            Attachment::class,
-            'model',
-            'attachment_usages'
-        );
+        return $this->morphToMany(Attachment::class, 'model', (new AttachmentUsage)->getTable())
+            ->using(AttachmentUsage::class)
+            ->withPivot(['tag']);
     }
 
     /**
@@ -66,18 +74,19 @@ trait HasAttachments
     /**
      * Add usage to attachment.
      *
-     * @param Attachment|int $attachment
+     * @param  Attachment|int $attachment
+     * @param  string         $tag
      */
-    public function attachmentUse($attachment)
+    public function attachmentUse($attachment, $tag = AttachmentUsage::TAG_DEFAULT)
     {
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
         $id = $this->getUsageModelId();
         $type = $this->getUsageModelType();
-        if ($id === null || $attachment === null) {
-            return;
+        // Add usage if all data is present
+        if ($attachment !== null && $id !== null) {
+            Attachments::addUsage($attachment, $id, $type, $tag);
         }
-        Attachments::addUsage($attachment, $id, $type);
     }
 
     /**
@@ -91,22 +100,38 @@ trait HasAttachments
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
         $id = $this->getUsageModelId();
         $type = $this->getUsageModelType();
-        if ($id === null || $attachment === null) {
-            return;
+        // Remove usage if all data is present
+        if ($attachment !== null && $id !== null) {
+            Attachments::removeUsage($attachment, $id, $type);
         }
-        Attachments::removeUsage($attachment, $id, $type);
     }
 
     /**
      * Fallback private attachment download check if model has no Policy.
      *
-     * @param User       $user
-     * @param Attachment $attachment
+     * @param  User       $user
+     * @param  Attachment $attachment
      * @return bool
      */
     public function attachmentCanDownload(User $user, Attachment $attachment)
     {
         return false;
+    }
+
+    /**
+     * Restore attachments (IDs) in model.
+     */
+    public function restoreAttachmentsInModelByTags()
+    {
+        $attachments = $this->attachments;
+        foreach ($attachments as $attachment) {
+            /** @var \DigitSoft\Attachments\AttachmentUsage|null $usage */
+            if (($usage = $attachment->pivot) === null || ($tagName = $usage->tag) === AttachmentUsage::TAG_DEFAULT) {
+                continue;
+            }
+
+            AttachmentUsage::setAttributeValueNested($this, $tagName, $attachment->getKey());
+        }
     }
 
     /**
@@ -116,11 +141,21 @@ trait HasAttachments
      */
     private function getUsageModelType()
     {
-        if ($this->attachments_model_type !== null) {
-            return $this->attachments_model_type;
-        }
+        $useMorphMap = static::$useMorphMap ?? config('attachments.use_morph_map', false);
+        return $useMorphMap ? $this->getUsageMorphAliasForClass(get_called_class()) : get_called_class();
+    }
 
-        return get_called_class();
+    /**
+     * Get alias for class using morphs.
+     *
+     * @param  string $className
+     * @return string
+     */
+    private function getUsageMorphAliasForClass(string $className)
+    {
+        $alias = array_search($className, Relation::$morphMap, true);
+
+        return $alias !== false ? $alias : $className;
     }
 
     /**
@@ -132,5 +167,4 @@ trait HasAttachments
     {
         return $this->getKey();
     }
-
 }

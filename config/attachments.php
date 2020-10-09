@@ -113,4 +113,11 @@ return [
     'group_rules' => [
         '*' => [], // Fallback rules
     ],
+    /*
+    |-------------------------------------------------------
+    | Whether to use or not morph map for attachment usage
+    | `model_type` column
+    |-------------------------------------------------------
+    */
+    'use_morph_map' => false,
 ];

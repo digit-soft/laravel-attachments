@@ -17,6 +17,7 @@ class MigrationCreator extends \Illuminate\Database\Migrations\MigrationCreator
         if ($this->files->exists($stubPath)) {
             return $this->files->get($stubPath);
         }
+
         return parent::getStub($table, $create);
     }
 

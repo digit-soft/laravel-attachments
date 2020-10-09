@@ -17,7 +17,6 @@ use Illuminate\Http\Testing\File as FileTest;
 
 /**
  * Class AttachmentsManager
- * @package DigitSoft\Attachments
  */
 class AttachmentsManager
 {
@@ -43,19 +42,22 @@ class AttachmentsManager
     protected $config;
     /**
      * For test purpose
+     *
      * @var array
      */
     protected $storageDiskNames = [];
     /**
      * File size limits cache
+     *
      * @var array
      */
     protected $fileSizeLimitsByExt;
 
     /**
      * AttachmentsManager constructor.
-     * @param Filesystem $files
-     * @param Repository $config
+     *
+     * @param  Filesystem $files
+     * @param  Repository $config
      */
     public function __construct(Filesystem $files, Repository $config)
     {
@@ -65,26 +67,30 @@ class AttachmentsManager
 
     /**
      * Add usage to attachment
-     * @param Attachment $attachment
-     * @param int|string $model_id
-     * @param string     $model_type
+     *
+     * @param  Attachment $attachment
+     * @param  int|string $model_id
+     * @param  string     $model_type
+     * @param  string     $tag
      */
-    public function addUsage(Attachment $attachment, $model_id, $model_type)
+    public function addUsage(Attachment $attachment, $model_id, $model_type, $tag = AttachmentUsage::TAG_DEFAULT)
     {
         if ($this->hasUsage($attachment, $model_id, $model_type)) {
             return;
         }
         $attachment->usages()->create([
             'model_id' => $model_id,
-            'model_type' => $model_type
+            'model_type' => $model_type,
+            'tag' => $tag,
         ]);
     }
 
     /**
      * Remove usages from attachment
-     * @param Attachment $attachment
-     * @param int|string $model_id
-     * @param string     $model_type
+     *
+     * @param  Attachment $attachment
+     * @param  int|string $model_id
+     * @param  string     $model_type
      */
     public function removeUsage(Attachment $attachment, $model_id, $model_type)
     {
@@ -96,9 +102,10 @@ class AttachmentsManager
 
     /**
      * Check that attachment has usage by model
-     * @param Attachment $attachment
-     * @param int|string $model_id
-     * @param string     $model_type
+     *
+     * @param  Attachment $attachment
+     * @param  int|string $model_id
+     * @param  string     $model_type
      * @return bool
      */
     public function hasUsage(Attachment $attachment, $model_id, $model_type)
@@ -111,8 +118,9 @@ class AttachmentsManager
 
     /**
      * Get attachment URL
-     * @param Attachment $attachment
-     * @param bool       $absolute
+     *
+     * @param  Attachment $attachment
+     * @param  bool       $absolute
      * @return string
      */
     public function getUrl(Attachment $attachment, $absolute = true)
@@ -122,13 +130,14 @@ class AttachmentsManager
 
     /**
      * Get URL to download private attachment
-     * @param Attachment $attachment
+     *
+     * @param  Attachment $attachment
      * @return null|string
      */
     public function getUrlPrivate(Attachment $attachment)
     {
         $user = auth()->user();
-        if (!$this->tokenManager()->canDownload($attachment, $user) || ($token = $this->tokenManager()->obtain($attachment, $user)) === null) {
+        if (! $this->tokenManager()->canDownload($attachment, $user) || ($token = $this->tokenManager()->obtain($attachment, $user)) === null) {
             return null;
         }
 
@@ -139,7 +148,8 @@ class AttachmentsManager
 
     /**
      * Get attachment by token string
-     * @param string $token
+     *
+     * @param  string $token
      * @return Attachment|null
      */
     public function getAttachmentByToken(string $token)
@@ -169,7 +179,7 @@ class AttachmentsManager
             return null;
         }
         $baseName = basename($fileUrl);
-        if (!preg_match('/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/i', $baseName)) {
+        if (! preg_match('/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/i', $baseName)) {
             $baseName = '';
         }
         $uploadedFile = new UploadedFile($tmpFileName, $baseName);
@@ -204,7 +214,7 @@ class AttachmentsManager
      */
     public function createFromFile($file, $group = null, $private = false, $creatorId = null)
     {
-        if ($file instanceof UploadedFile || !$this->isInSaveDir($file->getRealPath())) {
+        if ($file instanceof UploadedFile || ! $this->isInSaveDir($file->getRealPath())) {
             [$nameOriginal, $file] = $this->saveFile($file, $group, $private);
         } else {
             $nameOriginal = $file->getFilename();
@@ -222,9 +232,10 @@ class AttachmentsManager
 
     /**
      * Save uploaded file to storage
-     * @param UploadedFile|File|FileTest $file
-     * @param string            $group
-     * @param bool              $private
+     *
+     * @param  UploadedFile|File|FileTest $file
+     * @param  string                     $group
+     * @param  bool                       $private
      * @return array
      */
     public function saveFile($file, $group, $private = false)
@@ -246,10 +257,11 @@ class AttachmentsManager
 
     /**
      * Save resource to storage
-     * @param resource $resource
-     * @param string   $fileName
-     * @param string   $group
-     * @param bool     $private
+     *
+     * @param  resource $resource
+     * @param  string   $fileName
+     * @param  string   $group
+     * @param  bool     $private
      * @return array
      */
     public function saveResource($resource, $fileName, $group, $private = false)
@@ -271,6 +283,7 @@ class AttachmentsManager
 
     /**
      * Cleanup DB from unused attachments
+     *
      * @param  int|null $expire_time Expire time for attachment
      * @param  bool     $onlyDb      Remove only from DB
      * @param  int|null $batchSize   Size of batch for query results
@@ -280,6 +293,7 @@ class AttachmentsManager
     public function cleanup($expire_time = null, $onlyDb = false, $batchSize = 200)
     {
         $removedCount = 0;
+        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $expire_time = $expire_time ?? $this->config->get('attachments.expire_time');
         $timestamp = now()->subSeconds($expire_time);
         /** @var Attachment[] $attachments */
@@ -298,12 +312,13 @@ class AttachmentsManager
         $query->each(function ($attachment) use ($onlyDb, &$removedCount) {
             /** @var Attachment $attachment */
             $attachmentPath = $attachment->path();
-            if (!$onlyDb && ($storage = $attachment->storage()) !== null && $storage->exists($attachmentPath)) {
+            if (! $onlyDb && ($storage = $attachment->storage()) !== null && $storage->exists($attachmentPath)) {
                 $storage->delete($attachmentPath);
             }
             $attachment->delete();
             $removedCount++;
         }, $batchSize);
+
         return $removedCount;
     }
 
@@ -328,6 +343,7 @@ class AttachmentsManager
 
     /**
      * Get public storage
+     *
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
      */
     public function getStoragePublic()
@@ -337,6 +353,7 @@ class AttachmentsManager
 
     /**
      * Get private storage
+     *
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
      */
     public function getStoragePrivate()
@@ -346,9 +363,10 @@ class AttachmentsManager
 
     /**
      * Get storage save path
-     * @param string      $type
-     * @param string|null $group
-     * @param bool        $full
+     *
+     * @param  string      $type
+     * @param  string|null $group
+     * @param  bool        $full
      * @return string
      */
     public function getSavePath($type = self::STORAGE_PUBLIC, $group = null, $full = false)
@@ -359,13 +377,15 @@ class AttachmentsManager
         if ($full) {
             $path = $this->convertPathToReal($path);
         }
+
         return $path;
     }
 
     /**
      * Set storage name for particular storage type
-     * @param string $name
-     * @param string $type
+     *
+     * @param  string $name
+     * @param  string $type
      */
     public function setStorage($name, $type = self::STORAGE_PUBLIC)
     {
@@ -374,6 +394,7 @@ class AttachmentsManager
 
     /**
      * Get token manager instance
+     *
      * @return TokenManager
      */
     public function tokenManager()
@@ -384,8 +405,8 @@ class AttachmentsManager
     /**
      * Get file group rules.
      *
-     * @param  string $fileGroup
-     * @param  bool   $addBail
+     * @param  string|null $fileGroup
+     * @param  bool        $addBail
      * @return array
      * @throws null
      */
@@ -485,7 +506,7 @@ class AttachmentsManager
      */
     public function fileSizeStringifyValue(int $size, int $precision = 2)
     {
-        $units = array('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+        $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
         $bytes = max($size, 0);
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
@@ -540,7 +561,7 @@ class AttachmentsManager
 
         $basePath = $this->config->get('attachments.url.base_path');
         $basePath = $basePath ? '/' . ltrim($basePath, '/') : '';
-        if (!$absolute) {
+        if (! $absolute) {
             return $basePath . '/' . $path;
         }
 
@@ -576,8 +597,9 @@ class AttachmentsManager
 
     /**
      * Check that path is in save directory
-     * @param string $path
-     * @param bool   $private
+     *
+     * @param  string $path
+     * @param  bool   $private
      * @return bool
      */
     protected function isInSaveDir($path, $private = false)
@@ -589,7 +611,7 @@ class AttachmentsManager
     }
 
     /**
-     * @param string $storagePath
+     * @param  string $storagePath
      * @return string
      */
     protected function convertPathToReal($storagePath)
@@ -600,7 +622,7 @@ class AttachmentsManager
     }
 
     /**
-     * @param string $realPath
+     * @param  string $realPath
      * @return string
      */
     protected function convertPathToStorage($realPath)
