@@ -60,7 +60,10 @@ class AttachmentUsage extends MorphPivot
         // Additional casting for original attribute
         if ($original) {
             $attributeValue = $model->getOriginal($attributeFirst);
-            $attributeValue = $attributeValue !== null ? $model->castAttribute($attributeFirst, $attributeValue) : null;
+            // Laravel 7+ already casts original attributes
+            if (version_compare(app()->version(), 7, '<')) {
+                $attributeValue = $attributeValue !== null ? $model->castAttribute($attributeFirst, $attributeValue) : null;
+            }
         } else {
             $attributeValue = $model->{$attributeFirst};
         }
