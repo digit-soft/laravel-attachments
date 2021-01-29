@@ -63,7 +63,14 @@ class AttachmentObserver
 
         // Add usage to newly saved attachments
         if (! empty($modelIds)) {
-            $models = Attachment::query()->whereIn('id', $modelIds)->get()->keyBy('id');
+            // Make fake models instead of getting them from a DB
+            $models = collect($modelIds)->map(function($id) {
+                $mdl = (new Attachment)->forceFill(['id' => $id])->syncOriginal();
+                $mdl->exists = true;
+                return $mdl;
+            })->keyBy('id');
+            // Let it be here for the future ^_^
+            // $models = Attachment::query()->whereIn('id', $modelIds)->get()->keyBy('id');
             $model->attachments()->saveMany($models, $pivotAttributes);
         }
     }
