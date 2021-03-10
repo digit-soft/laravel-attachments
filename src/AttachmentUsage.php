@@ -85,6 +85,7 @@ class AttachmentUsage extends MorphPivot
             return;
         }
 
+        // TODO: Doesn't work good with dotted keys
         Arr::set($attributeValue, implode('.', $keys), $value);
         $model->{$attributeFirst} = $attributeValue;
     }
