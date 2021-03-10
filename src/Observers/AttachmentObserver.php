@@ -136,13 +136,14 @@ class AttachmentObserver
      *
      * @param  \Illuminate\Database\Eloquent\Model $model
      * @param  array                               $attributes
+     * @param  bool                                $onlyChanged Get only changed attributes
      * @return array[]
      */
-    protected function processNormalAttachableSaved(Model $model, array $attributes)
+    protected function processNormalAttachableSaved(Model $model, array $attributes, bool $onlyChanged = true)
     {
         $modelIds = $pivotAttributes = [];
         foreach ($attributes as $attachableField) {
-            if (($modelId = $model->{$attachableField}) !== null) {
+            if (($modelId = $model->{$attachableField}) !== null && (! $onlyChanged || $modelId !== $model->getOriginal($attachableField))) {
                 $modelIds[] = $modelId;
                 $pivotAttributes[$modelId] = ['tag' => $attachableField];
             }
@@ -156,14 +157,15 @@ class AttachmentObserver
      *
      * @param  \Illuminate\Database\Eloquent\Model $model
      * @param  array                               $attributes
+     * @param  bool                                $onlyChanged Get only changed attributes
      * @return array[]
      */
-    protected function processCollectedAttachableSaved(Model $model, array $attributes)
+    protected function processCollectedAttachableSaved(Model $model, array $attributes, bool $onlyChanged = true)
     {
         $modelIds = $pivotAttributes = [];
         foreach ($attributes as $attachableField) {
             $modelId = AttachmentUsage::getAttributeValueNested($model, $attachableField);
-            if ($modelId !== null) {
+            if ($modelId !== null && (! $onlyChanged || $modelId !== AttachmentUsage::getAttributeValueNested($model, $attachableField, true))) {
                 $modelIds[] = $modelId;
                 $pivotAttributes[$modelId] = ['tag' => $attachableField];
             }
