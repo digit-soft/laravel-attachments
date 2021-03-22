@@ -2,11 +2,12 @@
 
 namespace DigitSoft\Attachments;
 
-use DigitSoft\Attachments\Traits\WithAttachmentsManager;
-use DigitSoft\Attachments\Commands\CleanupAttachmentsCommand;
-use DigitSoft\Attachments\Commands\CreateDirectoriesCommand;
-use DigitSoft\Attachments\Commands\CreateMigrationCommand;
 use Illuminate\Support\ServiceProvider;
+use DigitSoft\Attachments\Traits\WithAttachmentsManager;
+use DigitSoft\Attachments\Commands\CreateMigrationCommand;
+use DigitSoft\Attachments\Commands\CleanupImageCacheCommand;
+use DigitSoft\Attachments\Commands\CreateDirectoriesCommand;
+use DigitSoft\Attachments\Commands\CleanupAttachmentsCommand;
 
 /**
  * Class AttachmentsServiceProvider
@@ -78,7 +79,7 @@ class AttachmentsServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register console commands
+     * Register console commands.
      */
     protected function registerCommands()
     {
@@ -91,11 +92,15 @@ class AttachmentsServiceProvider extends ServiceProvider
         $this->app->singleton('command.attachments.cleanup', function () {
             return new CleanupAttachmentsCommand();
         });
+        $this->app->singleton('command.attachments.cleanup-presets', function () {
+            return new CleanupImageCacheCommand();
+        });
 
         $this->commands([
             'command.attachments.tables',
             'command.attachments.directories',
             'command.attachments.cleanup',
+            'command.attachments.cleanup-presets',
         ]);
     }
 
@@ -109,6 +114,7 @@ class AttachmentsServiceProvider extends ServiceProvider
             'command.attachments.tables',
             'command.attachments.directories',
             'command.attachments.cleanup',
+            'command.attachments.cleanup-presets',
         ];
     }
 }
