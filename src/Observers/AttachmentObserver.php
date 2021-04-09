@@ -63,7 +63,14 @@ class AttachmentObserver
 
         // Add usage to newly saved attachments
         if (! empty($modelIds)) {
-            $models = Attachment::query()->whereIn('id', $modelIds)->get()->keyBy('id');
+            // Make fake models instead of getting them from a DB
+            $models = collect($modelIds)->map(function($id) {
+                $mdl = (new Attachment)->forceFill(['id' => $id])->syncOriginal();
+                $mdl->exists = true;
+                return $mdl;
+            })->keyBy('id');
+            // Let it be here for the future ^_^
+            // $models = Attachment::query()->whereIn('id', $modelIds)->get()->keyBy('id');
             $model->attachments()->saveMany($models, $pivotAttributes);
         }
     }
@@ -129,13 +136,14 @@ class AttachmentObserver
      *
      * @param  \Illuminate\Database\Eloquent\Model $model
      * @param  array                               $attributes
+     * @param  bool                                $onlyChanged Get only changed attributes
      * @return array[]
      */
-    protected function processNormalAttachableSaved(Model $model, array $attributes)
+    protected function processNormalAttachableSaved(Model $model, array $attributes, bool $onlyChanged = true)
     {
         $modelIds = $pivotAttributes = [];
         foreach ($attributes as $attachableField) {
-            if (($modelId = $model->{$attachableField}) !== null) {
+            if (($modelId = $model->{$attachableField}) !== null && (! $onlyChanged || $modelId !== $model->getOriginal($attachableField))) {
                 $modelIds[] = $modelId;
                 $pivotAttributes[$modelId] = ['tag' => $attachableField];
             }
@@ -149,14 +157,15 @@ class AttachmentObserver
      *
      * @param  \Illuminate\Database\Eloquent\Model $model
      * @param  array                               $attributes
+     * @param  bool                                $onlyChanged Get only changed attributes
      * @return array[]
      */
-    protected function processCollectedAttachableSaved(Model $model, array $attributes)
+    protected function processCollectedAttachableSaved(Model $model, array $attributes, bool $onlyChanged = true)
     {
         $modelIds = $pivotAttributes = [];
         foreach ($attributes as $attachableField) {
             $modelId = AttachmentUsage::getAttributeValueNested($model, $attachableField);
-            if ($modelId !== null) {
+            if ($modelId !== null && (! $onlyChanged || $modelId !== AttachmentUsage::getAttributeValueNested($model, $attachableField, true))) {
                 $modelIds[] = $modelId;
                 $pivotAttributes[$modelId] = ['tag' => $attachableField];
             }

@@ -72,7 +72,7 @@ class AttachmentUsage extends MorphPivot
             return $attributeValue;
         }
 
-        return Arr::accessible($attributeValue) ? Arr::get($attributeValue, implode('.', $keys)) : null;
+        return Arr::accessible($attributeValue) ? static::getWithDottedKeys($attributeValue, implode('.', $keys)) : null;
     }
 
     public static function setAttributeValueNested($model, $attribute, $value)
@@ -85,7 +85,56 @@ class AttachmentUsage extends MorphPivot
             return;
         }
 
+        // TODO: Doesn't work good with dotted keys
         Arr::set($attributeValue, implode('.', $keys), $value);
         $model->{$attributeFirst} = $attributeValue;
+    }
+
+    /**
+     * Get an item from an array using "dot" notation.
+     *
+     * Works with last key in "dotted" syntax.
+     *
+     * @param  array      $array
+     * @param  string     $key
+     * @param  mixed|null $default
+     * @return mixed
+     */
+    private static function getWithDottedKeys($array, $key, $default = null)
+    {
+        if (! Arr::accessible($array)) {
+            return value($default);
+        }
+
+        if (is_null($key)) {
+            return $array;
+        }
+
+        if (Arr::exists($array, $key)) {
+            return $array[$key];
+        }
+
+        if (strpos($key, '.') === false) {
+            return $array[$key] ?? value($default);
+        }
+
+        $keysExploded = explode('.', $key);
+        while (! empty($keysExploded)) {
+            $segment = array_shift($keysExploded);
+            if (Arr::accessible($array) && Arr::exists($array, $segment)) {
+                $array = $array[$segment];
+            } elseif(
+                ! empty($keysExploded)
+                && ($segmentLong = implode('.', array_merge([$segment], $keysExploded)))
+                && Arr::exists($array, $segmentLong)
+            ) {
+                $array = $array[$segmentLong];
+                break;
+            } else {
+                return value($default);
+            }
+        }
+
+        return $array;
     }
 }
