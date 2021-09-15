@@ -2,9 +2,9 @@
 
 namespace DigitSoft\Attachments;
 
-use DigitSoft\Attachments\Facades\Attachments;
 use Intervention\Image\Constraint;
 use Intervention\Image\Facades\Image;
+use DigitSoft\Attachments\Facades\Attachments;
 
 class ImagePreset
 {
@@ -38,6 +38,7 @@ class ImagePreset
 
     /**
      * Execute transformation for file
+     *
      * @param  string $fileSourcePath
      * @param  bool   $overwriteSource
      * @return bool
@@ -45,7 +46,7 @@ class ImagePreset
     public function executeForFile($fileSourcePath, $overwriteSource = false)
     {
         $storage = Attachments::getStoragePublic();
-        if (!$storage->exists($this->convertPathToStorage($fileSourcePath))) {
+        if (! $storage->exists($this->convertPathToStorage($fileSourcePath))) {
             return false;
         }
         $fileDstPath = $overwriteSource
@@ -54,7 +55,7 @@ class ImagePreset
         $dstDirPath = $this->convertPathToStorage(dirname($fileDstPath));
         $img = $this->getImage($fileSourcePath);
         $img->orientate();
-        $resizeCallback = function($constraint) {
+        $resizeCallback = function ($constraint) {
             /** @var Constraint $constraint */
             $constraint->aspectRatio();
         };
@@ -63,7 +64,7 @@ class ImagePreset
         } else {
             $img->resize($this->width, $this->height, $resizeCallback);
         }
-        if (!$storage->exists($dstDirPath)) {
+        if (! $storage->exists($dstDirPath)) {
             $storage->makeDirectory($dstDirPath, 0777, true);
         }
         try {
@@ -71,13 +72,15 @@ class ImagePreset
         } catch (\Intervention\Image\Exception\NotWritableException $exception) {
             return false;
         }
+
         return true;
     }
 
     /**
      * Get destination path
-     * @param string $sourcePath
-     * @param bool   $full
+     *
+     * @param  string $sourcePath
+     * @param  bool   $full
      * @return string
      */
     public function dstPath($sourcePath, $full = false)
@@ -86,16 +89,18 @@ class ImagePreset
         $sourcePath = $this->convertPathToAttachments($sourcePath);
         $sourcePathArr = explode($ds, $sourcePath);
         $fileName = array_pop($sourcePathArr);
-        $fileGroup = !empty($sourcePathArr) ? $ds . implode($ds, $sourcePathArr) : '';
+        $fileGroup = ! empty($sourcePathArr) ? $ds . implode($ds, $sourcePathArr) : '';
         $presetName = $this->nameEncoded();
         $imgCachePath = config('attachments.image_cache_path');
         $dstPath = $imgCachePath . $ds . $presetName . $fileGroup . $ds . $fileName;
+
         return $full ? Attachments::getStoragePublic()->path($dstPath) : $dstPath;
     }
 
     /**
      * Create Image object
-     * @param string $filePath
+     *
+     * @param  string $filePath
      * @return \Intervention\Image\Image
      */
     protected function getImage($filePath)
@@ -105,18 +110,27 @@ class ImagePreset
 
     /**
      * Convert full path => public storage relative path
-     * @param string $fullPath
-     * @return bool|string
+     *
+     * @param  string $fullPath
+     * @return string
      */
     protected function convertPathToStorage($fullPath)
     {
         $storagePath = app()->storagePath() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
+
         return strpos($fullPath, $storagePath) === 0 ? substr($fullPath, strlen($storagePath)) : $fullPath;
     }
 
+    /**
+     * Convert full path => Attachments path.
+     *
+     * @param  string $fullPath
+     * @return string
+     */
     protected function convertPathToAttachments($fullPath)
     {
         $attachmentsPath = Attachments::getSavePath(AttachmentsManager::STORAGE_PUBLIC, null, true) . DIRECTORY_SEPARATOR;
+
         return strpos($fullPath, $attachmentsPath) === 0 ? substr($fullPath, strlen($attachmentsPath)) : $fullPath;
     }
 
@@ -138,41 +152,50 @@ class ImagePreset
      */
     protected static function validateDimensions($width, $height, $crop = false)
     {
-        $wIsNumeric = $width !== null && is_numeric($width);
-        $hIsNumeric = $height !== null && is_numeric($height);
-        if (!$wIsNumeric && !$hIsNumeric) {
-            return false;
-        } elseif ($crop && (!$wIsNumeric || !$hIsNumeric)) {
-            return false;
-        } elseif ($wIsNumeric && $width <= 0 || $hIsNumeric && $height <= 0) {
-            return false;
-        } elseif ($wIsNumeric && $width > static::MAX_DIMENSION || $hIsNumeric && $height > static::MAX_DIMENSION) {
+        $wIsNumeric = is_numeric($width);
+        $hIsNumeric = is_numeric($height);
+        if (! $wIsNumeric && ! $hIsNumeric) {
             return false;
         }
+
+        if ($crop && (!$wIsNumeric || !$hIsNumeric)) {
+            return false;
+        }
+
+        if (
+            ($wIsNumeric && ($width <= 0 || $width > static::MAX_DIMENSION))
+            || ($hIsNumeric && ($height <= 0 || $height > static::MAX_DIMENSION))
+        ) {
+            return false;
+        }
+
         return true;
     }
 
     /**
      * Get encoded name from width, height and crop data
+     *
      * @param  int|null $width
      * @param  int|null $height
-     * @param  bool $crop
+     * @param  bool     $crop
      * @return string|null
      */
     public static function encodeName($width = null, $height = null, $crop = false)
     {
-        if (!static::validateDimensions($width, $height, $crop)) {
+        if (! static::validateDimensions($width, $height, $crop)) {
             return null;
         }
         $wStr = $width !== null ? dechex($width) : '';
         $hStr = $height !== null ? dechex($height) : '';
         $cropStr = $crop ? '-c' : '';
+
         return $wStr . '-' . $hStr . $cropStr;
     }
 
     /**
      * Create object from encoded preset name
-     * @param string $nameEncoded
+     *
+     * @param  string $nameEncoded
      * @return ImagePreset|null
      */
     public static function createFromEncoded($nameEncoded)
@@ -181,12 +204,13 @@ class ImagePreset
         if ($nameEncoded === "" || empty($nameArr)) {
             return null;
         }
-        $width = !empty($nameArr[0]) ? hexdec($nameArr[0]) : null;
-        $height = !empty($nameArr[1]) ? hexdec($nameArr[1]) : null;
+        $width = ! empty($nameArr[0]) ? hexdec($nameArr[0]) : null;
+        $height = ! empty($nameArr[1]) ? hexdec($nameArr[1]) : null;
         $crop = isset($nameArr[2]) && $nameArr[2] === 'c';
-        if (!static::validateDimensions($width, $height, $crop)) {
+        if (! static::validateDimensions($width, $height, $crop)) {
             return null;
         }
+
         return new static($width, $height, $crop);
     }
 }
