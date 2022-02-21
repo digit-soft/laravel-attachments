@@ -3,7 +3,6 @@
 namespace DigitSoft\Attachments;
 
 use Illuminate\Http\File;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,7 +12,6 @@ use DigitSoft\Attachments\Traits\WithImageConversion;
 /**
  * DigitSoft\Attachments\Attachment
  *
- * @mixin \Eloquent
  * @property int                               $id            ID
  * @property int|null                          $user_id       Author id
  * @property string                            $name          File base name
@@ -37,6 +35,7 @@ use DigitSoft\Attachments\Traits\WithImageConversion;
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment whereNameOriginal($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Attachment wherePrivate($value)
+ * @mixin \Eloquent
  */
 class Attachment extends Model
 {
@@ -50,7 +49,7 @@ class Attachment extends Model
 
     protected $hidden = ['created_at'];
 
-    protected $_imageDimensions;
+    protected ?array $_imageDimensions = null;
 
     public static function boot()
     {
@@ -92,17 +91,19 @@ class Attachment extends Model
     }
 
     /**
-     * Get URL
-     * @return null|string
+     * Get URL (absolute).
+     *
+     * @return string|null
      */
     public function getUrlAttribute()
     {
-        return Attachments::getUrl($this);
+        return Attachments::getUrl($this, true);
     }
 
     /**
-     * Get URL
-     * @return null|string
+     * Get URL (relative).
+     *
+     * @return string|null
      */
     public function getUrlRelativeAttribute()
     {
@@ -111,9 +112,10 @@ class Attachment extends Model
 
     /**
      * Get file mime type
-     * @return null|string
+     *
+     * @return string|null
      */
-    public function mime()
+    public function mime(): ?string
     {
         $file = $this->file();
 
@@ -126,11 +128,11 @@ class Attachment extends Model
      * @param  string $expression
      * @return bool
      */
-    public function isMimeLike(string $expression = '*')
+    public function isMimeLike(string $expression = '*'): bool
     {
         $mime = $this->mime();
 
-        return $mime !== null ? Str::is($expression, $mime) : false;
+        return $mime !== null && Str::is($expression, $mime);
     }
 
     /**
@@ -138,7 +140,7 @@ class Attachment extends Model
      *
      * @return int|null
      */
-    public function size()
+    public function size(): ?int
     {
         $file = $this->file();
 
@@ -149,9 +151,9 @@ class Attachment extends Model
      * Get readable file size.
      *
      * @param  int $precision
-     * @return int|null
+     * @return string|null
      */
-    public function sizeHuman($precision = 2)
+    public function sizeHuman(int $precision = 2): ?string
     {
         if (($size = $this->size()) === null) {
             return null;
@@ -165,7 +167,7 @@ class Attachment extends Model
      *
      * @return string|null
      */
-    public function extension()
+    public function extension(): ?string
     {
         $file = $this->file();
 
@@ -176,9 +178,9 @@ class Attachment extends Model
      * Get file object.
      *
      * @param  bool $flush
-     * @return File|null
+     * @return \Illuminate\Http\File|null
      */
-    public function file($flush = false)
+    public function file(bool $flush = false): ?File
     {
         if (($flush || $this->_file === null) && $this->name !== null) {
             $this->_file = new File($this->path(true));
@@ -216,11 +218,11 @@ class Attachment extends Model
      *
      * @return array
      */
-    protected function getImageDimensions()
+    protected function getImageDimensions(): array
     {
         if ($this->_imageDimensions === null) {
             $data = $this->isMimeLike('image/*') ? getimagesize($this->pathFull) : false;
-            $this->_imageDimensions = !empty($data) ? [$data[0], $data[1]] : [null, null];
+            $this->_imageDimensions = ! empty($data) ? [$data[0], $data[1]] : [null, null];
         }
 
         return $this->_imageDimensions;
@@ -232,7 +234,7 @@ class Attachment extends Model
      * @param  bool $full
      * @return string
      */
-    public function path($full = false)
+    public function path(bool $full = false): string
     {
         $storageType = $this->private ? AttachmentsManager::STORAGE_PRIVATE : AttachmentsManager::STORAGE_PUBLIC;
         $dirPath = Attachments::getSavePath($storageType, $this->group, $full);
@@ -241,7 +243,8 @@ class Attachment extends Model
     }
 
     /**
-     * Get file store
+     * Get file store.
+     *
      * @return \Illuminate\Contracts\Filesystem\Filesystem|\Illuminate\Filesystem\FilesystemAdapter
      */
     public function storage()
@@ -250,7 +253,8 @@ class Attachment extends Model
     }
 
     /**
-     * Get usages
+     * Get usages.
+     *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function usages()
@@ -260,26 +264,28 @@ class Attachment extends Model
 
     /**
      * Get models using this attachment
+     *
      * @return \Illuminate\Support\Collection
      */
-    public function getModelsAttribute()
+    public function getModelsAttribute(): \Illuminate\Support\Collection
     {
-        /** @var array|\Illuminate\Support\Collection $usages */
         $usages = $this->usages()->with(['model'])->get();
-        $models = Arr::pluck($usages, 'model');
-        return collect($models);
+
+        return $usages->pluck('model')->filter(fn ($m) => $m !== null)->values();
     }
 
     /**
      * Find attachment by file path (relative to storage app)
-     * @param string $filePath
+     *
+     * @param  string $filePath
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function whereFilePath($filePath)
+    public static function whereFilePath(string $filePath)
     {
         $filePathArr = explode(DIRECTORY_SEPARATOR, $filePath);
         $fileName = array_pop($filePathArr);
-        $fileGroup = !empty($filePathArr) ? implode(DIRECTORY_SEPARATOR, $filePathArr) : null;
+        $fileGroup = ! empty($filePathArr) ? implode(DIRECTORY_SEPARATOR, $filePathArr) : null;
+
         return static::query()
             ->where('name', '=', $fileName)
             ->where('group', '=', $fileGroup);

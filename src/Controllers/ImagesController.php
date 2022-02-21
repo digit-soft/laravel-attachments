@@ -2,11 +2,12 @@
 
 namespace DigitSoft\Attachments\Controllers;
 
-use DigitSoft\Attachments\Attachment;
-use DigitSoft\Attachments\Facades\Attachments;
-use DigitSoft\Attachments\ImagePreset;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use DigitSoft\Attachments\Attachment;
+use DigitSoft\Attachments\ImagePreset;
+use DigitSoft\Attachments\Facades\Attachments;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -26,7 +27,7 @@ class ImagesController extends Controller
     public function imagePreset(Request $request, $presetName, $fileName)
     {
         $attachment = $this->findAttachmentByFilePath($fileName);
-        if (!$attachment->isMimeLike('image/*') || ($preset = ImagePreset::createFromEncoded($presetName)) === null) {
+        if (! $attachment->isMimeLike('image/*') || ($preset = ImagePreset::createFromEncoded($presetName)) === null) {
             throw new NotFoundHttpException();
         }
         $srcPath = $attachment->path(true);
@@ -41,11 +42,16 @@ class ImagesController extends Controller
 
     /**
      * Find attachment by relative file path
-     * @param string $filePath
-     * @return Attachment
+     *
+     * @param  string|null $filePath
+     * @return \DigitSoft\Attachments\Attachment
      */
-    protected function findAttachmentByFilePath($filePath)
+    protected function findAttachmentByFilePath(?string $filePath): Attachment
     {
+        if ($filePath === null) {
+            throw (new ModelNotFoundException())->setModel(Attachment::class);
+        }
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Attachment::whereFilePath($filePath)->firstOrFail();
     }
 }
