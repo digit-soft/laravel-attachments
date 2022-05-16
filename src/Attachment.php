@@ -236,10 +236,13 @@ class Attachment extends Model
      */
     public function path(bool $full = false): string
     {
+        if (($filename = $this->name) === null) {
+            return '';
+        }
         $storageType = $this->private ? AttachmentsManager::STORAGE_PRIVATE : AttachmentsManager::STORAGE_PUBLIC;
         $dirPath = Attachments::getSavePath($storageType, $this->group, $full);
 
-        return $dirPath . DIRECTORY_SEPARATOR . $this->name;
+        return $dirPath . DIRECTORY_SEPARATOR . $filename;
     }
 
     /**

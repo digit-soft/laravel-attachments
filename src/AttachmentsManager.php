@@ -555,7 +555,9 @@ class AttachmentsManager
      */
     protected function getUrlPublic(Attachment $attachment, bool $absolute = true): string
     {
-        $path = $attachment->path();
+        if (($path = $attachment->path()) === '') {
+            return '';
+        }
         $prefix = $this->config->get('attachments.save_path_public');
         $path = strpos($path, $prefix) === 0 ? substr($path, strlen($prefix) + 1) : $path;
 
@@ -577,7 +579,9 @@ class AttachmentsManager
      */
     protected function getUrlPrivateObtain(Attachment $attachment, bool $absolute = true): string
     {
-        return url()->route(static::ROUTE_PRIVATE_OBTAIN, ['id' => $attachment->id], $absolute);
+        return $attachment->id !== null
+            ? url()->route(static::ROUTE_PRIVATE_OBTAIN, ['id' => $attachment->id], $absolute)
+            : '';
     }
 
     /**
