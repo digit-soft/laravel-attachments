@@ -16,6 +16,6 @@ trait WithAttachmentsManager
      */
     protected static function attachmentsManager()
     {
-        return WithAttachmentsManager::$_attachmentsManagerInstance ?? WithAttachmentsManager::$_attachmentsManagerInstance = app('attachments');
+        return self::$_attachmentsManagerInstance ?? self::$_attachmentsManagerInstance = app('attachments');
     }
 }

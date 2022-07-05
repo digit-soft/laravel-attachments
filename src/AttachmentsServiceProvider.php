@@ -53,11 +53,7 @@ class AttachmentsServiceProvider extends ServiceProvider
     protected function registerManager()
     {
         $this->app->singleton('attachments', function ($app) {
-            $instance = new AttachmentsManager($app['files'], $app['config']);
-
-            WithAttachmentsManager::$_attachmentsManagerInstance = $instance;
-
-            return $instance;
+            return new AttachmentsManager($app['files'], $app['config']);
         });
     }
 
