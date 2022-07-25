@@ -18,8 +18,6 @@ use DigitSoft\Attachments\Observers\AttachmentObserver;
  */
 trait HasAttachments
 {
-    private static $useMorphMap;
-
     /**
      * Get fields related to attachments.
      *
@@ -58,7 +56,8 @@ trait HasAttachments
     {
         return $this->morphToMany(Attachment::class, 'model', (new AttachmentUsage)->getTable())
             ->using(AttachmentUsage::class)
-            ->withPivot(['tag']);
+            ->withPivot(['tag'])
+            ->orderBy((new Attachment)->qualifyColumn('id'));
     }
 
     /**
@@ -77,7 +76,7 @@ trait HasAttachments
      * @param  Attachment|int $attachment
      * @param  string         $tag
      */
-    public function attachmentUse($attachment, $tag = AttachmentUsage::TAG_DEFAULT)
+    public function attachmentUse($attachment, $tag = AttachmentUsage::TAG_DEFAULT): void
     {
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
@@ -94,7 +93,7 @@ trait HasAttachments
      *
      * @param Attachment|int $attachment
      */
-    public function attachmentForgetUsage($attachment)
+    public function attachmentForgetUsage($attachment): void
     {
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
@@ -113,7 +112,7 @@ trait HasAttachments
      * @param  Attachment $attachment
      * @return bool
      */
-    public function attachmentCanDownload(User $user, Attachment $attachment)
+    public function attachmentCanDownload(User $user, Attachment $attachment): bool
     {
         return false;
     }
@@ -121,7 +120,7 @@ trait HasAttachments
     /**
      * Restore attachments (IDs) in model.
      */
-    public function restoreAttachmentsInModelByTags()
+    public function restoreAttachmentsInModelByTags(): void
     {
         $attachments = $this->attachments;
         foreach ($attachments as $attachment) {
@@ -139,9 +138,10 @@ trait HasAttachments
      *
      * @return string
      */
-    private function getUsageModelType()
+    private function getUsageModelType(): string
     {
-        $useMorphMap = static::$useMorphMap ?? config('attachments.use_morph_map', false);
+        $useMorphMap = config('attachments.use_morph_map', false);
+
         return $useMorphMap ? $this->getUsageMorphAliasForClass(get_called_class()) : get_called_class();
     }
 
@@ -151,7 +151,7 @@ trait HasAttachments
      * @param  string $className
      * @return string
      */
-    private function getUsageMorphAliasForClass(string $className)
+    private function getUsageMorphAliasForClass(string $className): string
     {
         $alias = array_search($className, Relation::$morphMap, true);
 

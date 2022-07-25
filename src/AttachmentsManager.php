@@ -476,14 +476,14 @@ class AttachmentsManager
      * @param  int|string $size
      * @return float|int
      */
-    public function fileSizeNormalizeValue($size)
+    public function fileSizeNormalizeValue(string|int $size)
     {
         if (is_numeric($size)) {
             return $size;
         }
 
         // Parse string data like 150M or 20MB
-        if (is_string($size) && preg_match('/^((?:\d+(?:\s+)?))([KMGB])?B?$/i', $size, $matches)) {
+        if (is_string($size) && preg_match('/^((?:\d+(?:\s+)?))([KMGTPEZYB])?B?$/i', $size, $matches)) {
             $sizeNum = (int)preg_replace('/\D+/', '', $matches[1]);
             $pref = mb_strtoupper($matches[2]);
             $powers = ['B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']; // power for given suffix

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \DigitSoft\Attachments\TokenManager tokenManager()
  * @method static string getFileGroupRules(string $fileGroup, $addBail = true)
  * @method static string fileSizeStringifyValue(int $size, int $precision = 2) Format file size for human
+ * @method static int fileSizeNormalizeValue(string|int $size) Normalize file size given is string format to count of bytes
  * @see \DigitSoft\Attachments\AttachmentsManager
  */
 class Attachments extends Facade
