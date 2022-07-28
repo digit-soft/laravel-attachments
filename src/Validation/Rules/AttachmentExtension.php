@@ -16,11 +16,11 @@ class AttachmentExtension extends AttachmentUploadExtension
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         $id = (int)$value;
         /** @var Attachment|null $model */
-        if (! is_int($id) || $id <= 0 || ($model = Attachment::find($id)) === null) {
+        if ($id <= 0 || ($model = Attachment::find($id)) === null) {
             return false;
         }
 

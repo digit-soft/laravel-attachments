@@ -31,13 +31,13 @@ class AttachmentUploadExtension implements Rule
      *
      * @var string[]
      */
-    protected $extensions = [];
+    protected array $extensions = [];
 
     /**
      * List of presets.
      * @var array
      */
-    protected static $presetsExtensions = [
+    protected static array $presetsExtensions = [
         self::PRESET_IMAGES => ['jpg', 'jpeg', 'png', 'gif'],
         self::PRESET_IMAGES_OTHER => ['tif'],
         self::PRESET_DOCUMENTS_TEXT => ['doc', 'docx', 'rtf', 'odt', 'pdf'],
@@ -54,15 +54,15 @@ class AttachmentUploadExtension implements Rule
      * Flag, determines whether class is fully booted.
      * @var bool
      */
-    protected static $booted = false;
+    protected static bool $booted = false;
 
     /**
      * AttachmentUploadExtRule constructor.
      *
-     * @param  array $extensions List of permitted file extensions (wo leading dot)
-     * @param  array $presets    List of preset names to use to fill permitted extensions
+     * @param  array|string $extensions List of permitted file extensions (wo leading dot)
+     * @param  array|string $presets    List of preset names to use to fill permitted extensions
      */
-    public function __construct($extensions = [], $presets = [])
+    public function __construct(array|string $extensions = [], array|string $presets = [])
     {
         static::bootIfNotBooted();
         $this->extensions = is_array($extensions) ? $extensions : [$extensions];
@@ -76,7 +76,7 @@ class AttachmentUploadExtension implements Rule
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value)
+    public function passes($attribute, $value): bool
     {
         if (
             ! $value instanceof UploadedFile
@@ -105,7 +105,7 @@ class AttachmentUploadExtension implements Rule
      * @param  string[]|string $extensions
      * @return $this
      */
-    public function withExtensions($extensions)
+    public function withExtensions(array|string $extensions): static
     {
         $extensions = is_array($extensions) ? $extensions : [$extensions];
         $this->extensions = array_unique(array_merge($this->extensions, $extensions));
@@ -118,7 +118,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withImages()
+    public function withImages(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_IMAGES);
     }
@@ -128,7 +128,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withImagesExtended()
+    public function withImagesExtended(): static
     {
         return $this->addExtensionsFromPresets([static::PRESET_IMAGES ,static::PRESET_IMAGES_OTHER]);
     }
@@ -138,7 +138,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withVideos()
+    public function withVideos(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_MEDIA_VIDEO);
     }
@@ -148,7 +148,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withAudios()
+    public function withAudios(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_MEDIA_AUDIO);
     }
@@ -158,7 +158,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withDocuments()
+    public function withDocuments(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_DOCUMENTS_ALL);
     }
@@ -168,7 +168,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withDocumentsExtended()
+    public function withDocumentsExtended(): static
     {
         return $this->addExtensionsFromPresets([static::PRESET_DOCUMENTS_ALL, static::PRESET_DOCUMENTS_OTHER]);
     }
@@ -178,7 +178,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withDocumentsText()
+    public function withDocumentsText(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_DOCUMENTS_TEXT);
     }
@@ -188,7 +188,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withDocumentsTables()
+    public function withDocumentsTables(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_DOCUMENTS_TABLES);
     }
@@ -198,7 +198,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return $this
      */
-    public function withDocumentsPresentations()
+    public function withDocumentsPresentations(): static
     {
         return $this->addExtensionsFromPresets(static::PRESET_DOCUMENTS_PRESENTATIONS);
     }
@@ -208,7 +208,7 @@ class AttachmentUploadExtension implements Rule
      *
      * @return string
      */
-    protected function getExtensionsAsString()
+    protected function getExtensionsAsString(): string
     {
         $extensions = $this->extensions;
         sort($extensions);
@@ -225,7 +225,7 @@ class AttachmentUploadExtension implements Rule
      * @param  string[]|string $presets
      * @return $this
      */
-    protected function addExtensionsFromPresets($presets)
+    protected function addExtensionsFromPresets(array|string $presets): static
     {
         $presets = is_array($presets) ? $presets : [$presets];
 
@@ -251,7 +251,7 @@ class AttachmentUploadExtension implements Rule
     /**
      * Boot class, perform some operations.
      */
-    protected static function bootIfNotBooted()
+    protected static function bootIfNotBooted(): void
     {
         if (static::$booted) {
             return;
