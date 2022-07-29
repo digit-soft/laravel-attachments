@@ -16,7 +16,7 @@ class AttachmentExtension extends AttachmentUploadExtension
      * @param  mixed  $value
      * @return bool
      */
-    public function passes($attribute, $value): bool
+    public function passes($attribute, $value)
     {
         $id = (int)$value;
         /** @var Attachment|null $model */
