@@ -3,7 +3,7 @@
     "description": "File attachments for laravel.",
     "keywords": ["files", "attachments"],
     "license": "MIT",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "authors": [
         {
             "name": "Digit",

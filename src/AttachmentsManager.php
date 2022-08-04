@@ -168,7 +168,7 @@ class AttachmentsManager
      * @param  int|null    $creatorId
      * @return \DigitSoft\Attachments\Attachment|null
      */
-    public function createFromUrl($fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null): ?Attachment
+    public function createFromUrl(string $fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null): ?Attachment
     {
         $client = new HttpClient(['verify' => false]);
         $tmpFileName = tempnam(sys_get_temp_dir(), 'attDl');
@@ -241,7 +241,7 @@ class AttachmentsManager
     public function saveFile($file, ?string $group, bool $private = false): array
     {
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
-        $nameOriginal = $file instanceof UploadedFile && $file->getClientOriginalName() ? $file->getClientOriginalName() : $file->getFilename();
+        $nameOriginal = $file instanceof UploadedFile && ! empty($nameClients = $file->getClientOriginalName()) ? $nameClients : $file->getFilename();
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
         $nameSaved = $storage->putFileAs($savePath, $file, $this->getFileSaveName($file));
@@ -264,7 +264,7 @@ class AttachmentsManager
      * @param  bool        $private
      * @return array
      */
-    public function saveResource($resource, string $fileName, ?string $group, bool $private = false)
+    public function saveResource($resource, string $fileName, ?string $group, bool $private = false): array
     {
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
         $storage = $this->getStorage($storageType);
@@ -286,7 +286,7 @@ class AttachmentsManager
      *
      * @param  int|null $expire_time Expire time for attachment
      * @param  bool     $onlyDb      Remove only from DB
-     * @param  int|null $batchSize   Size of batch for query results
+     * @param  int      $batchSize   Size of batch for query results
      * @return int Number of removed attachments
      * @throws \Exception
      */
@@ -387,7 +387,7 @@ class AttachmentsManager
      * @param  string $name
      * @param  string $type
      */
-    public function setStorage(string $name, string $type = self::STORAGE_PUBLIC)
+    public function setStorage(string $name, string $type = self::STORAGE_PUBLIC): void
     {
         $this->storageDiskNames[$type] = $name;
     }
@@ -395,7 +395,7 @@ class AttachmentsManager
     /**
      * Get token manager instance
      *
-     * @return TokenManager
+     * @return \DigitSoft\Attachments\TokenManager
      */
     public function tokenManager()
     {
@@ -410,7 +410,7 @@ class AttachmentsManager
      * @return array
      * @throws null
      */
-    public function getFileGroupRules(?string $fileGroup = null, bool $addBail = true)
+    public function getFileGroupRules(?string $fileGroup = null, bool $addBail = true): array
     {
         $fileGroup = is_string($fileGroup)
             ? preg_replace('/[_\s]+/', '-', $fileGroup)
@@ -446,7 +446,7 @@ class AttachmentsManager
      * @param  string|null $extension
      * @return array|int|null
      */
-    public function fileSizeGetLimitByExt(?string $extension = null)
+    public function fileSizeGetLimitByExt(?string $extension = null): array|int|null
     {
         if ($this->fileSizeLimitsByExt === null) {
             $limitsRaw = $this->config->get('attachments.file_size_limits', []);
@@ -474,9 +474,9 @@ class AttachmentsManager
      * Normalize file size given is string format to count of bytes.
      *
      * @param  int|string $size
-     * @return float|int
+     * @return int
      */
-    public function fileSizeNormalizeValue(string|int $size)
+    public function fileSizeNormalizeValue(string|int $size): int
     {
         if (is_numeric($size)) {
             return $size;
@@ -559,7 +559,7 @@ class AttachmentsManager
             return '';
         }
         $prefix = $this->config->get('attachments.save_path_public');
-        $path = strpos($path, $prefix) === 0 ? substr($path, strlen($prefix) + 1) : $path;
+        $path = str_starts_with($path, $prefix) ? substr($path, strlen($prefix) + 1) : $path;
 
         $basePath = $this->config->get('attachments.url.base_path');
         $basePath = $basePath ? '/' . ltrim($basePath, '/') : '';
@@ -611,14 +611,14 @@ class AttachmentsManager
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
         $savePath = $this->getSavePath($storageType, null, true);
 
-        return strpos($path, $savePath) === 0;
+        return str_starts_with($path, $savePath);
     }
 
     /**
      * @param  string $storagePath
      * @return string
      */
-    protected function convertPathToReal($storagePath): string
+    protected function convertPathToReal(string $storagePath): string
     {
         $ds = DIRECTORY_SEPARATOR;
 
@@ -629,11 +629,11 @@ class AttachmentsManager
      * @param  string $realPath
      * @return string
      */
-    protected function convertPathToStorage($realPath): string
+    protected function convertPathToStorage(string $realPath): string
     {
         $pathStorage = app()->storagePath() . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR;
 
-        return strpos($realPath, $pathStorage) === 0 ? substr($realPath, strlen($pathStorage)) : $realPath;
+        return str_starts_with($realPath, $pathStorage) ? substr($realPath, strlen($pathStorage)) : $realPath;
     }
 
     /**
