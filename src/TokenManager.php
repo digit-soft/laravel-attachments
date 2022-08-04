@@ -3,10 +3,10 @@
 namespace DigitSoft\Attachments;
 
 use Illuminate\Support\Str;
+use Illuminate\Redis\RedisManager;
+use Illuminate\Contracts\Auth\Authenticatable;
 use DigitSoft\Attachments\Traits\TokenChecksAccess;
 use DigitSoft\Attachments\Traits\TokenStoresInRedis;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Redis\RedisManager;
 
 class TokenManager
 {
@@ -14,33 +14,38 @@ class TokenManager
 
     /**
      * Redis manager
+     *
      * @var RedisManager
      */
-    protected $redis;
+    protected RedisManager $redis;
     /**
      * Redis connection
-     * @var string
+     *
+     * @var string|null
      */
-    protected $connection;
+    protected ?string $connection;
     /**
      * Expire time in seconds
+     *
      * @var int
      */
-    protected $expireTime;
+    protected int $expireTime;
     /**
      * Token string length
+     *
      * @var int
      */
-    protected $tokenLength;
+    protected int $tokenLength;
 
     /**
      * TokenManager constructor.
-     * @param RedisManager $redis
-     * @param string       $connection
-     * @param int          $expireTime
-     * @param int          $tokenLength
+     *
+     * @param  \Illuminate\Redis\RedisManager $redis
+     * @param  string|null                    $connection
+     * @param  int                            $expireTime
+     * @param  int                            $tokenLength
      */
-    public function __construct(RedisManager $redis, $connection = null, $expireTime = 3600, $tokenLength = 60)
+    public function __construct(RedisManager $redis, ?string $connection = null, int $expireTime = 3600, int $tokenLength = 60)
     {
         $this->redis = $redis;
         $this->expireTime = $expireTime;
@@ -50,58 +55,62 @@ class TokenManager
 
     /**
      * Obtain token for attachment and user
-     * @param Attachment $attachment
-     * @param User       $user
+     *
+     * @param  Attachment      $attachment
+     * @param  Authenticatable $user
      * @return null|string
      */
-    public function obtain(Attachment $attachment, User $user)
+    public function obtain(Attachment $attachment, Authenticatable $user): ?string
     {
         $tokenStr = $this->getToken($attachment, $user);
-        if ($tokenStr !== null) {
-            return $tokenStr;
-        }
-        return $this->createToken($attachment, $user);
+
+        return $tokenStr ?? $this->createToken($attachment, $user);
     }
 
     /**
      * Create new token for attachment and user
-     * @param Attachment $attachment
-     * @param User       $user
+     *
+     * @param  Attachment      $attachment
+     * @param  Authenticatable $user
      * @return string|null
      */
-    public function createToken(Attachment $attachment, User $user)
+    public function createToken(Attachment $attachment, Authenticatable $user): ?string
     {
         $tokenStr = $this->generateTokenStr();
+
         return $this->store($attachment, $user, $tokenStr) ? $tokenStr : null;
     }
 
     /**
      * Forget token for attachment and user
-     * @param Attachment $attachment
-     * @param User       $user
+     *
+     * @param  Attachment      $attachment
+     * @param  Authenticatable $user
      */
-    public function forget(Attachment $attachment, User $user)
+    public function forget(Attachment $attachment, Authenticatable $user): void
     {
         $this->destroy($attachment, $user);
     }
 
     /**
      * Check that user has token for this attachment
-     * @param Attachment $attachment
-     * @param User       $user
+     *
+     * @param  Attachment      $attachment
+     * @param  Authenticatable $user
      * @return bool
      */
-    public function has(Attachment $attachment, User $user)
+    public function has(Attachment $attachment, Authenticatable $user): bool
     {
         return $this->getToken($attachment, $user) !== null;
     }
 
     /**
-     * Validate token string
-     * @param string $token
+     * Validate token string.
+     *
+     * @param  string $token
      * @return bool
      */
-    public function validateTokenStr(string $token)
+    public function validateTokenStr(string $token): bool
     {
         $hashLn = 64; //for sha256 (256/4)
         if (strlen($token) !== ($this->tokenLength + $hashLn)) {
@@ -110,21 +119,24 @@ class TokenManager
         $pos = ceil($this->tokenLength / 2);
         $randStr = substr($token, 0, $pos) . substr($token, -($this->tokenLength - $pos));
         $hash = strtolower(substr($token, $pos, $hashLn));
+
         return hash('sha256', $randStr) === $hash;
     }
 
 
     /**
-     * Set redis manager
-     * @param RedisManager $redis
+     * Set redis manager.
+     *
+     * @param  RedisManager $redis
      */
-    public function setRedis(RedisManager $redis)
+    public function setRedis(RedisManager $redis): void
     {
         $this->redis = $redis;
     }
 
     /**
-     * Get redis connection
+     * Get redis connection.
+     *
      * @return \Illuminate\Redis\Connections\Connection
      */
     protected function redis()
@@ -134,15 +146,17 @@ class TokenManager
 
     /**
      * Generate token string.
+     *
      * @return string
+     * @throws null
      */
-    protected function generateTokenStr()
+    protected function generateTokenStr(): string
     {
         $randomStr = Str::random($this->tokenLength);
         $hash = hash('sha256', $randomStr);
         $hashLn = 64; //for sha256 (256/4)
         for ($i = 0; $i < $hashLn; $i++) {
-            if (!is_numeric($hash[$i]) && random_int(0, 1) % 2) {
+            if (! is_numeric($hash[$i]) && random_int(0, 1) % 2) {
                 $hash[$i] = strtoupper($hash[$i]);
             }
         }

@@ -2,10 +2,10 @@
 
 namespace DigitSoft\Attachments\Traits;
 
+use Illuminate\Redis\RedisManager;
 use DigitSoft\Attachments\Attachment;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User;
-use Illuminate\Redis\RedisManager;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
  * Trait StoresTokensInRedis
@@ -14,54 +14,59 @@ use Illuminate\Redis\RedisManager;
  */
 trait TokenStoresInRedis
 {
-    private $tokenKeyPattern = 'att:{token}';
-    private $attachmentKeyPattern = 'att:{attachment}:{user}';
+    private string $tokenKeyPattern = 'att:{token}';
+    private string $attachmentKeyPattern = 'att:{attachment}:{user}';
 
     /**
      * Save token to storage
-     * @param Attachment|int $attachment
-     * @param User|int       $user
-     * @param string         $tokenStr
+     *
+     * @param  Attachment|int      $attachment
+     * @param  Authenticatable|int $user
+     * @param  string              $tokenStr
      * @return bool
      */
-    public function store($attachment, $user, string $tokenStr)
+    public function store(Attachment|int $attachment, Authenticatable|int $user, string $tokenStr): bool
     {
         $attachmentId = $this->normalizeModelKey($attachment);
         $userId = $this->normalizeModelKey($user);
         $tokenKey = $this->getTokenStorageKey($tokenStr);
         $attachmentKey = $this->getAttachmentStorageKey($attachmentId, $userId);
-        list($tokenAttId, $tokenUsrId) = $this->get($tokenStr);
+        [$tokenAttId, $tokenUsrId] = $this->get($tokenStr);
         $valid = $tokenAttId === null && $tokenUsrId === null && $this->getToken($attachmentId, $userId) === null;
         if ($valid) {
             $this->redis()->setex($tokenKey, $this->expireTime, $attachment->getKey() . ':' . $user->getKey());
             $this->redis()->setex($attachmentKey, $this->expireTime, $tokenStr);
         }
+
         return $valid;
     }
 
     /**
-     * Refresh token (reset expire time)
-     * @param string $tokenStr
+     * Refresh token (reset expire time).
+     *
+     * @param  string $tokenStr
      * @return bool
      */
-    public function refresh($tokenStr)
+    public function refresh(string $tokenStr): bool
     {
-        list($attachment, $user) = $this->get($tokenStr);
+        [$attachment, $user] = $this->get($tokenStr);
         if ($attachment !== null && $user !== null) {
             $tokenKey = $this->getTokenStorageKey($tokenStr);
             $attachmentKey = $this->getAttachmentStorageKey($attachment, $user);
             $this->redis()->expire($tokenKey, $this->expireTime);
             $this->redis()->expire($attachmentKey, $this->expireTime);
         }
+
         return false;
     }
 
     /**
      * Destroy token(s) by attachment and(or) user
-     * @param Attachment|int|null $attachment
-     * @param User|int|null       $user
+     *
+     * @param  Attachment|int|null      $attachment
+     * @param  Authenticatable|int|null $user
      */
-    public function destroy($attachment = null, $user = null)
+    public function destroy(Attachment|int|null $attachment = null, Authenticatable|int|null $user = null): void
     {
         if ($attachment !== null && $user !== null && ($tokenStr = $this->getToken($attachment, $user)) !== null) {
             $keys = [
@@ -78,11 +83,12 @@ trait TokenStoresInRedis
 
     /**
      * Destroy token by string representation
-     * @param string $tokenStr
+     *
+     * @param  string $tokenStr
      */
-    public function destroyStr($tokenStr)
+    public function destroyStr(string $tokenStr): void
     {
-        list($attachmentId, $userId) = $this->get($tokenStr);
+        [$attachmentId, $userId] = $this->get($tokenStr);
         if ($attachmentId !== null && $userId !== null) {
             $keys = [
                 $this->getTokenStorageKey($tokenStr),
@@ -94,20 +100,21 @@ trait TokenStoresInRedis
 
     /**
      * Get attachment and user IDs by token string
-     * @param string $tokenStr
-     * @param bool   $loadModels
+     *
+     * @param  string $tokenStr
+     * @param  bool   $loadModels
      * @return array
      */
-    public function get($tokenStr, $loadModels = false)
+    public function get(string $tokenStr, bool $loadModels = false): array
     {
         $data = $this->redis()->get($this->getTokenStorageKey($tokenStr));
-        if (!$data || strpos($data, ':') === false) {
+        if (! $data || ! str_contains($data, ':')) {
             return [null, null];
         }
         $ids = explode(':', $data);
         $data = [
-            is_numeric($ids[0]) ? intval($ids[0]) : null, //Attachment ID
-            is_numeric($ids[1]) ? intval($ids[1]) : null, //User ID
+            is_numeric($ids[0]) ? (int)$ids[0] : null, // Attachment ID
+            is_numeric($ids[1]) ? (int)$ids[1] : null, // User ID
         ];
         if ($loadModels) {
             /** @var \Eloquent $userModel */
@@ -115,48 +122,54 @@ trait TokenStoresInRedis
             $data[0] = $data[0] ? Attachment::whereKey($data[0])->first() : null;
             $data[1] = $data[1] ? $userModel::whereKey($data[1])->first() : null;
         }
+
         return $data;
     }
 
     /**
-     * Get token string for attachment and user
-     * @param Attachment|int $attachment
-     * @param User|int       $user
-     * @return string
+     * Get token string for attachment and user.
+     *
+     * @param  Attachment|int      $attachment
+     * @param  Authenticatable|int $user
+     * @return string|null
      */
-    public function getToken($attachment, $user)
+    public function getToken(Attachment|int $attachment, Authenticatable|int $user): ?string
     {
         return $this->redis()->get($this->getAttachmentStorageKey($attachment, $user));
     }
 
     /**
      * Get token string storage key
-     * @param string $tokenStr
+     *
+     * @param  string $tokenStr
      * @return string
      */
-    protected function getTokenStorageKey($tokenStr)
+    protected function getTokenStorageKey(string $tokenStr): string
     {
         return strtr($this->tokenKeyPattern, ['{token}' => $tokenStr]);
     }
 
     /**
      * Get attachment/user token storage key
-     * @param Attachment|int $attachment
-     * @param User|int       $user
+     *
+     * @param  \DigitSoft\Attachments\Attachment|string|int          $attachment
+     * @param  \Illuminate\Contracts\Auth\Authenticatable|string|int $user
      * @return string
      */
-    protected function getAttachmentStorageKey($attachment, $user)
+    protected function getAttachmentStorageKey(Attachment|string|int $attachment, Authenticatable|string|int $user): string
     {
-        $attachmentId = $this->normalizeModelKey($attachment);
-        $userId = $this->normalizeModelKey($user);
+        $attachmentId = $attachment === '*' ? $attachment : $this->normalizeModelKey($attachment);
+        $userId = $user === '*' ? $user : $this->normalizeModelKey($user);
+
         return strtr($this->attachmentKeyPattern, ['{attachment}' => $attachmentId, '{user}' => $userId]);
     }
 
     /**
-     * Destroy all tokens for attachment
-     * @param Attachment|int $attachment
+     * Destroy all tokens for attachment.
+     *
+     * @param  Attachment|int $attachment
      */
-    protected function destroyAllAttachmentTokens($attachment)
+    protected function destroyAllAttachmentTokens(Attachment|int $attachment): void
     {
         $attachmentId = $this->normalizeModelKey($attachment);
         $attKeysPattern = $this->getAttachmentStorageKey($attachmentId, '*');
@@ -171,10 +184,11 @@ trait TokenStoresInRedis
     }
 
     /**
-     * Destroy all tokens for user
-     * @param User|int $user
+     * Destroy all tokens for user.
+     *
+     * @param  Authenticatable|int $user
      */
-    protected function destroyAllUserTokens($user)
+    protected function destroyAllUserTokens(Authenticatable|int $user): void
     {
         $attKeysPattern = $this->getAttachmentStorageKey('*', $user);
         $keys = $this->redis()->keys($attKeysPattern);
@@ -186,35 +200,43 @@ trait TokenStoresInRedis
 
     /**
      * Get user model class name
+     *
      * @return string
      */
-    private function getUserModelClass()
+    private function getUserModelClass(): string
     {
         return config('attachments.user_model', 'App\Models\User');
     }
 
     /**
-     * Get model key
-     * @param Model|mixed $model
-     * @return int|null
+     * Get model key.
+     *
+     * @param  Authenticatable|Model|mixed $model
+     * @return mixed|null
      */
-    private function normalizeModelKey($model)
+    private function normalizeModelKey($model): mixed
     {
+        if ($model instanceof Authenticatable) {
+            return $model->getAuthIdentifier();
+        }
         if ($model instanceof Model) {
             return $model->getKey();
         }
-        return is_numeric($model) ? intval($model) : null;
+
+        return is_numeric($model) ? (int)$model : null;
     }
 
 
     /**
-     * Set redis manager
-     * @param RedisManager $redis
+     * Set redis manager.
+     *
+     * @param  \Illuminate\Redis\RedisManager $redis
      */
     abstract public function setRedis(RedisManager $redis);
 
     /**
-     * Get redis connection
+     * Get redis connection.
+     *
      * @return \Illuminate\Redis\Connections\Connection
      */
     abstract protected function redis();
