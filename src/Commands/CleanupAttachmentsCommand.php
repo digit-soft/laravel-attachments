@@ -3,9 +3,11 @@
 namespace DigitSoft\Attachments\Commands;
 
 use Illuminate\Console\Command;
+use DigitSoft\Attachments\AttachmentsManager;
 
 /**
  * Cleanup unused attachments command
+ *
  * @package DigitSoft\Attachments\Commands
  */
 class CleanupAttachmentsCommand extends Command
@@ -24,6 +26,7 @@ class CleanupAttachmentsCommand extends Command
 
     /**
      * Handle command
+     *
      * @throws \Exception
      */
     public function handle()
@@ -38,9 +41,10 @@ class CleanupAttachmentsCommand extends Command
 
     /**
      * Get attachments manager instance
+     *
      * @return \DigitSoft\Attachments\AttachmentsManager
      */
-    private function attachmentsManager()
+    private function attachmentsManager(): AttachmentsManager
     {
         return app('attachments');
     }

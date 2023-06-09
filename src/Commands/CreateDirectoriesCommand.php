@@ -2,8 +2,8 @@
 
 namespace DigitSoft\Attachments\Commands;
 
-use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
+use Illuminate\Config\Repository;
 use Illuminate\Filesystem\Filesystem;
 
 class CreateDirectoriesCommand extends Command
@@ -12,19 +12,15 @@ class CreateDirectoriesCommand extends Command
 
     protected $description = 'Create save and publish directories for attachments';
 
-    /**
-     * @var Filesystem
-     */
-    protected $files;
-    /**
-     * @var Repository
-     */
-    protected $config;
+    protected Filesystem $files;
+
+    protected Repository $config;
 
     /**
      * CreateMigrationCommand constructor.
-     * @param Filesystem $files
-     * @param Repository $config
+     *
+     * @param  Filesystem $files
+     * @param  Repository $config
      */
     public function __construct(Filesystem $files, Repository $config)
     {
@@ -35,6 +31,7 @@ class CreateDirectoriesCommand extends Command
 
     /**
      * Handle command
+     *
      * @throws \Exception
      */
     public function handle()
@@ -52,12 +49,14 @@ class CreateDirectoriesCommand extends Command
 
     /**
      * Create directory
-     * @param string $path
+     *
+     * @param  string $path
      */
-    protected function createDir($path)
+    protected function createDir(string $path): void
     {
         if ($this->files->exists($path)) {
             $this->error("Path {$path} already exists");
+
             return;
         }
         $this->files->makeDirectory($path, 0755, true, true);
@@ -66,17 +65,20 @@ class CreateDirectoriesCommand extends Command
 
     /**
      * Create symlink
-     * @param string $target
-     * @param string $link
+     *
+     * @param  string $target
+     * @param  string $link
      */
-    protected function createSymlink($target, $link)
+    protected function createSymlink(string $target, string $link): void
     {
         if ($this->files->exists($link)) {
             $this->error("Link path {$link} already exists");
+
             return;
         }
-        if (!$this->files->exists($target)) {
-            $this->error("Target path {$target} not exists");
+        if (! $this->files->exists($target)) {
+            $this->error("Target path {$target} doesn't exist");
+
             return;
         }
         $this->files->link($target, $link);

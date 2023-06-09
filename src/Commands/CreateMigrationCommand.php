@@ -19,7 +19,7 @@ class CreateMigrationCommand extends Command
     /**
      * @var MigrationCreator
      */
-    protected $migrationCreator;
+    protected MigrationCreator $migrationCreator;
 
     /**
      * CreateMigrationCommand constructor.
@@ -39,8 +39,8 @@ class CreateMigrationCommand extends Command
      */
     public function handle()
     {
-        $migrationsData = $this->getMigrationsWithStubs();
-        foreach ($migrationsData as $row) {
+        $migrationData = $this->getMigrationsWithStubs();
+        foreach ($migrationData as $row) {
             [$stubName, $migrationName] = $row;
 
             try {
@@ -49,7 +49,7 @@ class CreateMigrationCommand extends Command
                 $this->error(get_class($exception) . ': ' . $exception->getMessage());
                 continue;
             }
-            $this->info("Migration from sub '${stubName}' created");
+            $this->info("Migration from sub '{$stubName}' created");
             // Pause for migration timestamp uniqueness
             sleep(1);
         }
@@ -60,9 +60,9 @@ class CreateMigrationCommand extends Command
      *
      * @return MigrationCreator
      */
-    protected function getMigrationCreator()
+    protected function getMigrationCreator(): MigrationCreator
     {
-        if ($this->migrationCreator === null) {
+        if (! isset($this->migrationCreator)) {
             $this->migrationCreator = new MigrationCreator($this->files);
         }
 
@@ -74,7 +74,7 @@ class CreateMigrationCommand extends Command
      *
      * @return string[][]
      */
-    protected function getMigrationsWithStubs()
+    protected function getMigrationsWithStubs(): array
     {
         return [
             // [ 'STUB_NAME', 'MIGRATION_NAME' ]

@@ -3,6 +3,7 @@
 namespace DigitSoft\Attachments\Commands;
 
 use Illuminate\Console\Command;
+use DigitSoft\Attachments\AttachmentsManager;
 
 /**
  * Cleanup unused attachments command
@@ -50,7 +51,7 @@ class CleanupImageCacheCommand extends Command
      *
      * @return \DigitSoft\Attachments\AttachmentsManager
      */
-    private function attachmentsManager()
+    private function attachmentsManager(): AttachmentsManager
     {
         return app('attachments');
     }
