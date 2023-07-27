@@ -6,7 +6,6 @@ use Illuminate\Foundation\Auth\User;
 use DigitSoft\Attachments\Attachment;
 use DigitSoft\Attachments\AttachmentUsage;
 use DigitSoft\Attachments\Facades\Attachments;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use DigitSoft\Attachments\Observers\AttachmentObserver;
 
 /**
@@ -80,7 +79,7 @@ trait HasAttachments
     {
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
-        $id = $this->getUsageModelId();
+        $id = $this->getKey();
         $type = $this->getUsageModelType();
         // Add usage if all data is present
         if ($attachment !== null && $id !== null) {
@@ -97,7 +96,7 @@ trait HasAttachments
     {
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $attachment = $attachment instanceof Attachment ? $attachment : Attachment::find($attachment);
-        $id = $this->getUsageModelId();
+        $id = $this->getKey();
         $type = $this->getUsageModelType();
         // Remove usage if all data is present
         if ($attachment !== null && $id !== null) {
@@ -142,29 +141,6 @@ trait HasAttachments
     {
         $useMorphMap = config('attachments.use_morph_map', false);
 
-        return $useMorphMap ? $this->getUsageMorphAliasForClass(get_called_class()) : get_called_class();
-    }
-
-    /**
-     * Get alias for class using morphs.
-     *
-     * @param  string $className
-     * @return string
-     */
-    private function getUsageMorphAliasForClass(string $className): string
-    {
-        $alias = array_search($className, Relation::$morphMap, true);
-
-        return $alias !== false ? $alias : $className;
-    }
-
-    /**
-     * Get ID for usage.
-     *
-     * @return string|int
-     */
-    private function getUsageModelId()
-    {
-        return $this->getKey();
+        return $useMorphMap ? $this->getMorphClass() : get_called_class();
     }
 }

@@ -87,6 +87,21 @@ class AttachmentObserver
     }
 
     /**
+     * Remove attachment's usages on models' bulk delete.
+     *
+     * Custom thing, sorry for that, folks ^_^.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @param  array                               $keys
+     * @return void
+     */
+    public function deletedBulk(Model $model, array $keys)
+    {
+        $modelType = config('attachments.use_morph_map', false) ? $model->getMorphClass() : get_class($model);
+        AttachmentUsage::query()->where('model_type', '=', $modelType)->whereIn('model_id', $keys)->delete();
+    }
+
+    /**
      * Process callback for `saving` event and normal attachable.
      *
      * @param  \Illuminate\Database\Eloquent\Model|HasAttachments $model
