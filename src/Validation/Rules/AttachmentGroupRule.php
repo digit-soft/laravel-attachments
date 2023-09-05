@@ -58,9 +58,6 @@ class AttachmentGroupRule implements Rule
     {
         $groups = $this->groups;
         sort($groups);
-        array_walk($groups, function (&$group) {
-            $group = '.' . $group;
-        });
 
         return implode(', ', $groups);
     }

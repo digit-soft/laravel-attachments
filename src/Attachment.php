@@ -229,6 +229,18 @@ class Attachment extends Model
     }
 
     /**
+     * Reset cached image dimensions.
+     *
+     * @return $this
+     */
+    public function resetImageDimensions(): static
+    {
+        $this->_imageDimensions = null;
+
+        return $this;
+    }
+
+    /**
      * Get file path.
      *
      * @param  bool $full
