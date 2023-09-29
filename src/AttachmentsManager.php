@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Testing\File as FileTest;
+use Illuminate\Contracts\Filesystem\Filesystem as FilesystemContract;
 
 /**
  * Class AttachmentsManager
@@ -241,16 +242,21 @@ class AttachmentsManager
     public function saveFile($file, ?string $group, bool $private = false): array
     {
         $storageType = $private ? static::STORAGE_PRIVATE : static::STORAGE_PUBLIC;
+        $visibility = $private ? FilesystemContract::VISIBILITY_PRIVATE : FilesystemContract::VISIBILITY_PUBLIC;
         $nameOriginal = $file instanceof UploadedFile && ! empty($nameClients = $file->getClientOriginalName()) ? $nameClients : $file->getFilename();
         $storage = $this->getStorage($storageType);
         $savePath = $this->getSavePath($storageType, $group);
-        $nameSaved = $storage->putFileAs($savePath, $file, $this->getFileSaveName($file));
+        $savePathExists = $storage->directoryExists($savePath);
+        $nameSaved = $storage->putFileAs($savePath, $file, $this->getFileSaveName($file), ['visibility' => $visibility]);
         if (! $nameSaved) {
             return [null, null];
         }
+        // If directory was recentry created give appropriate permissions
+        if (! $savePathExists) {
+            $storage->setVisibility($savePath, $visibility);
+        }
         $realPath = $this->convertPathToReal($nameSaved);
-        chmod($realPath, 0666);
-        $newFile = new File($realPath);
+        $newFile = new File($this->convertPathToReal($nameSaved));
 
         return [$nameOriginal, $newFile];
     }
