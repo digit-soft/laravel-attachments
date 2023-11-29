@@ -41,7 +41,7 @@ class AttachmentUploadExtension implements Rule
         self::PRESET_IMAGES => ['jpg', 'jpeg', 'png', 'gif'],
         self::PRESET_IMAGES_OTHER => ['tif'],
         self::PRESET_DOCUMENTS_TEXT => ['doc', 'docx', 'rtf', 'odt', 'pdf'],
-        self::PRESET_DOCUMENTS_TABLES => ['xls', 'xlsx', 'ods'],
+        self::PRESET_DOCUMENTS_TABLES => ['xls', 'xlsx', 'ods', 'csv'],
         self::PRESET_DOCUMENTS_PRESENTATIONS => ['ppt', 'pptx'],
         self::PRESET_DOCUMENTS_OTHER => ['xml', 'txt'], // not included in DOCUMENTS_ALL
         self::PRESET_DOCUMENTS_ALL => [], // will be filled on class boot
