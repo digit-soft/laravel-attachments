@@ -83,7 +83,11 @@ class AttachmentObserver
      */
     public function deleted(Model $model)
     {
-        $model->attachmentUsages()->delete();
+        $forceDelete = method_exists($model, 'isForceDeleting') ? $model->isForceDeleting() : true;
+        // Delete usages only on `forceDelete` when `SoftDelete` trait is used
+        if ($forceDelete) {
+            $model->attachmentUsages()->delete();
+        }
     }
 
     /**
@@ -95,8 +99,12 @@ class AttachmentObserver
      * @param  array                               $keys
      * @return void
      */
-    public function deletedBulk(Model $model, array $keys)
+    public function deletedBulk(Model $model, array $keys, bool $forceDelete = true)
     {
+        // Delete usages only on `forceDelete` when `SoftDelete` trait is used
+        if (! $forceDelete) {
+            return;
+        }
         $modelType = config('attachments.use_morph_map', false) ? $model->getMorphClass() : get_class($model);
         AttachmentUsage::query()->where('model_type', '=', $modelType)->whereIn('model_id', $keys)->delete();
     }
