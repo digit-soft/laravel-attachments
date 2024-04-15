@@ -215,7 +215,7 @@ class AttachmentsManager
      */
     public function createFromFile($file, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
     {
-        if ($file instanceof UploadedFile || ! (is_string($realPath = $file->getRealPath()) !== null && $this->isInSaveDir($realPath))) {
+        if ($file instanceof UploadedFile || ! (is_string($realPath = $file->getRealPath()) && $this->isInSaveDir($realPath))) {
             [$nameOriginal, $file] = $this->saveFile($file, $group, $private);
         } else {
             $nameOriginal = $file->getFilename();
