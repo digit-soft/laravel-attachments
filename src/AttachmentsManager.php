@@ -161,7 +161,7 @@ class AttachmentsManager
     }
 
     /**
-     * Create an attachment from remote file URL
+     * Create an attachment from remote file URL.
      *
      * @param  string      $fileUrl
      * @param  string|null $group
@@ -170,6 +170,57 @@ class AttachmentsManager
      * @return \DigitSoft\Attachments\Attachment|null
      */
     public function createFromUrl(string $fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null): ?Attachment
+    {
+        $model = $this->makeFromUrl($fileUrl, $group, $private, $creatorId);
+        $model?->save();
+
+        return $model;
+    }
+
+    /**
+     * Create an attachment from file path.
+     *
+     * @param  string      $filePath
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
+     * @return \DigitSoft\Attachments\Attachment
+     */
+    public function createFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    {
+        $model = $this->makeFromPath($filePath, $group, $private, $creatorId);
+        $model?->save();
+
+        return $model;
+    }
+
+    /**
+     * Create attachment from file object
+     *
+     * @param  File|UploadedFile|FileTest $file
+     * @param  string|null                $group
+     * @param  bool                       $private
+     * @param  int|null                   $creatorId
+     * @return \DigitSoft\Attachments\Attachment
+     */
+    public function createFromFile($file, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    {
+        $model = $this->makeFromFile($file, $group, $private, $creatorId);
+        $model?->save();
+
+        return $model;
+    }
+
+    /**
+     * Make an attachment from remote file URL.
+     *
+     * @param  string      $fileUrl
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
+     * @return \DigitSoft\Attachments\Attachment|null
+     */
+    public function makeFromUrl(string $fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null): ?Attachment
     {
         $client = new HttpClient(['verify' => false]);
         $tmpFileName = tempnam(sys_get_temp_dir(), 'attDl');
@@ -185,11 +236,11 @@ class AttachmentsManager
         }
         $uploadedFile = new UploadedFile($tmpFileName, $baseName);
 
-        return $this->createFromFile($uploadedFile, $group, $private, $creatorId);
+        return $this->makeFromFile($uploadedFile, $group, $private, $creatorId);
     }
 
     /**
-     * Create an attachment from file path
+     * Make an attachment from file path.
      *
      * @param  string      $filePath
      * @param  string|null $group
@@ -197,15 +248,15 @@ class AttachmentsManager
      * @param  int|null    $creatorId
      * @return \DigitSoft\Attachments\Attachment
      */
-    public function createFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    public function makeFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
     {
         $file = new File($filePath);
 
-        return $this->createFromFile($file, $group, $private, $creatorId);
+        return $this->makeFromFile($file, $group, $private, $creatorId);
     }
 
     /**
-     * Create attachment from file object
+     * Make attachment from file object
      *
      * @param  File|UploadedFile|FileTest $file
      * @param  string|null                $group
@@ -213,22 +264,21 @@ class AttachmentsManager
      * @param  int|null                   $creatorId
      * @return \DigitSoft\Attachments\Attachment
      */
-    public function createFromFile($file, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    public function makeFromFile($file, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
     {
         if ($file instanceof UploadedFile || ! (is_string($realPath = $file->getRealPath()) && $this->isInSaveDir($realPath))) {
             [$nameOriginal, $file] = $this->saveFile($file, $group, $private);
         } else {
             $nameOriginal = $file->getFilename();
         }
-        $data = [
+
+        return new Attachment([
             'name' => $file->getFilename(),
             'name_original' => $nameOriginal,
             'group' => $group,
             'private' => $private,
             'user_id' => $creatorId,
-        ];
-
-        return new Attachment($data);
+        ]);
     }
 
     /**
