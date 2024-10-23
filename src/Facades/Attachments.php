@@ -5,11 +5,16 @@ namespace DigitSoft\Attachments\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * Class Attachments
+ * Facade Attachments.
  *
- * @method static \DigitSoft\Attachments\Attachment createFromUrl(string $fileUrl, $group = null, $private = false, $creatorId = null)
- * @method static \DigitSoft\Attachments\Attachment createFromPath(string $filePath, $group = null, $private = false, $creatorId = null)
- * @method static \DigitSoft\Attachments\Attachment createFromFile(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $file, $group = null, $private = false, $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment createFromUrl(string $fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment createFromPath(string $filePath, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment createFromContent(string $content, string $filenameOriginal, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment createFromFile(\Illuminate\Http\File|\Illuminate\Http\UploadedFile $file, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment|null makeFromUrl(string $fileUrl, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment makeFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment makeFromContent(string $content, string $filenameOriginal, ?string $group = null, bool $private = false, ?int $creatorId = null)
+ * @method static \DigitSoft\Attachments\Attachment makeFromFile($file, ?string $group = null, bool $private = false, ?int $creatorId = null)
  * @method static array saveFile(\Illuminate\Http\UploadedFile $uploadedFile, $group, $private = false)
  * @method static void addUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type, $tag = 'default')
  * @method static void removeUsage(\DigitSoft\Attachments\Attachment $attachment, $model_id, $model_type)

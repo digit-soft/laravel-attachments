@@ -186,10 +186,28 @@ class AttachmentsManager
      * @param  int|null    $creatorId
      * @return \DigitSoft\Attachments\Attachment
      */
-    public function createFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    public function createFromPath(string $filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
     {
         $model = $this->makeFromPath($filePath, $group, $private, $creatorId);
         $model?->save();
+
+        return $model;
+    }
+
+    /**
+     * Create an attachment from the file content.
+     *
+     * @param  string      $content          String content of the file
+     * @param  string      $filenameOriginal File name to use as original one
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
+     * @return \DigitSoft\Attachments\Attachment
+     */
+    public function createFromContent(string $content, string $filenameOriginal, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    {
+        $model = $this->makeFromContent($content, $filenameOriginal, $group, $private, $creatorId);
+        $model->save();
 
         return $model;
     }
@@ -248,11 +266,38 @@ class AttachmentsManager
      * @param  int|null    $creatorId
      * @return \DigitSoft\Attachments\Attachment
      */
-    public function makeFromPath($filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    public function makeFromPath(string $filePath, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
     {
         $file = new File($filePath);
 
         return $this->makeFromFile($file, $group, $private, $creatorId);
+    }
+
+    /**
+     * Make an attachment from the file content.
+     *
+     * @param  string      $content          String content of the file
+     * @param  string      $filenameOriginal File name to use as original one
+     * @param  string|null $group
+     * @param  bool        $private
+     * @param  int|null    $creatorId
+     * @return \DigitSoft\Attachments\Attachment
+     */
+    public function makeFromContent(string $content, string $filenameOriginal, ?string $group = null, bool $private = false, ?int $creatorId = null): Attachment
+    {
+        $tmpFileName = tempnam(sys_get_temp_dir(), 'att_tmp_');
+        $tmpFileStream = fopen($tmpFileName, 'w+');
+
+        try {
+            fwrite($tmpFileStream, $content);
+            rewind($tmpFileStream);
+
+            $uploadedFile = new UploadedFile($tmpFileName, $filenameOriginal);
+
+            return $this->makeFromFile($uploadedFile, $group, $private, $creatorId);
+        } finally {
+            fclose($tmpFileStream);
+        }
     }
 
     /**
