@@ -346,11 +346,11 @@ class AttachmentsManager
         if (! $nameSaved) {
             return [null, null];
         }
-        // If directory was recentry created give appropriate permissions
+        // If directory was recently created give appropriate permissions
         if (! $savePathExists) {
             $storage->setVisibility($savePath, $visibility);
         }
-        $realPath = $this->convertPathToReal($nameSaved);
+        // $realPath = $this->convertPathToReal($nameSaved);
         $newFile = new File($this->convertPathToReal($nameSaved));
 
         return [$nameOriginal, $newFile];
