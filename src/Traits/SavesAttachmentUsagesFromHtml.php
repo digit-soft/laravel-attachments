@@ -24,6 +24,18 @@ trait SavesAttachmentUsagesFromHtml
     abstract protected function getAttributesToParseHtmlAttachments(): array;
 
     /**
+     * Get multiple base URLs for attachments to save from HTML markup.
+     *
+     * @return array
+     */
+    protected function getAttachmentsBaseUrlsInHtmlContent(): array
+    {
+        return [
+            static::getAttachmentsBaseUrlInHtmlContent(),
+        ];
+    }
+
+    /**
      * Boot trait.
      */
     protected static function bootSavesAttachmentUsagesFromHtml()
@@ -54,14 +66,14 @@ trait SavesAttachmentUsagesFromHtml
     /**
      * Get attachments used in some HTML attributes of the model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model $model
-     * @param  array                               $attributes
+     * @param  \Illuminate\Database\Eloquent\Model|SavesAttachmentUsagesFromHtml $model
+     * @param  array                                                             $attributes
      * @return array
      */
     protected static function getAttachmentsFromHtml(Model $model, array $attributes): array
     {
-        $baseUrl = static::getAttachmentsBaseUrl();
-        $regEx = '/^' . addcslashes($baseUrl, ':./-*+') . '\/(.*?)\/((?:[^\/]+)\.[a-z0-9]{1,6})$/iu';
+        $baseUrls = $model->getAttachmentsBaseUrlsInHtmlContent();
+        $regExList = array_map(fn ($baseUrl) => '/^' . addcslashes($baseUrl, ':./-*+') . '\/(.*?)\/((?:[^\/]+)\.[a-z0-9]{1,6})$/iu', $baseUrls);
         $attachmentPossible = [];
         foreach ($attributes as $attribute) {
             $attributeVal = AttachmentUsage::getAttributeValueNested($model, $attribute);
@@ -83,13 +95,14 @@ trait SavesAttachmentUsagesFromHtml
 
             foreach ($images as $img) {
                 /** @var \DOMNode $img */
-                $matches = [];
-                if (
-                    ($srcAttr = $img->attributes->getNamedItem('src')) !== null
-                    && ! empty($srcVal = $srcAttr->value)
-                    && preg_match($regEx, $srcVal, $matches)
-                ) {
-                    $attachmentPossible[] = ['group' => $matches[1], 'name' => $matches[2]];
+                if (($srcAttr = $img->attributes->getNamedItem('src')) === null || empty($srcVal = $srcAttr->value)) {
+                    continue;
+                }
+                foreach ($regExList as $regEx) {
+                    $matches = [];
+                    if (preg_match($regEx, $srcVal, $matches)) {
+                        $attachmentPossible[] = ['group' => $matches[1], 'name' => $matches[2]];
+                    }
                 }
             }
         }
@@ -118,7 +131,7 @@ trait SavesAttachmentUsagesFromHtml
      *
      * @return string
      */
-    private static function getAttachmentsBaseUrl(): string
+    protected static function getAttachmentsBaseUrlInHtmlContent(): string
     {
         $scheme = config('attachments.url.scheme', 'https');
         $host = config('attachments.url.host');
