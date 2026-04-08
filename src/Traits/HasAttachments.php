@@ -43,7 +43,11 @@ trait HasAttachments
      */
     public static function bootHasAttachments()
     {
-        static::observe(new AttachmentObserver());
+        if (version_compare(app()->version(), '12.8', '>=')) {
+            static::whenBooted(fn () => static::observe(new AttachmentObserver()));
+        } else {
+            static::observe(new AttachmentObserver());
+        }
     }
 
     /**
